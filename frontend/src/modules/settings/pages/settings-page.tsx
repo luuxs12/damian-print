@@ -19,16 +19,13 @@ import {
 import { toast } from "sonner";
 import { settingsService, Settings } from "../services/settings-service";
 import { ConfirmModal } from "@/shared/components/ui/confirm-modal/confirm-modal";
-import { useTheme } from "@/app/providers/theme-provider";
-import darkLogo from "@/assets/images/branding/logo-dark.png";
-import lightLogo from "@/assets/images/branding/logo-light.png";
+import defaultLogo from "@/assets/images/branding/tulogoaqui.png";
 import "./settings-page.scss";
 
 
 type TabId = "empresa" | "logos_pagos" | "sistema";
 
 export const SettingsPage = () => {
-  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState<TabId>("empresa");
   const [settings, setSettings] = useState<Settings | null>(null);
 
@@ -39,8 +36,12 @@ export const SettingsPage = () => {
   const [companyPhone, setCompanyPhone] = useState("");
   const [companyAddress, setCompanyAddress] = useState("");
 
+  const [smtpUser, setSmtpUser] = useState("");
+  const [smtpPass, setSmtpPass] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingSmtp, setSavingSmtp] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingYape, setUploadingYape] = useState(false);
   const [uploadingPlin, setUploadingPlin] = useState(false);
@@ -62,6 +63,8 @@ export const SettingsPage = () => {
       setCompanyEmail(data.companyEmail);
       setCompanyPhone(data.companyPhone);
       setCompanyAddress(data.companyAddress);
+      setSmtpUser(data.smtpUser || "");
+      setSmtpPass(data.smtpPass || "");
     } catch (error) {
       toast.error("Error al cargar la configuración del sistema.");
       console.error(error);
@@ -97,6 +100,25 @@ export const SettingsPage = () => {
       toast.error(message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Save SMTP Settings
+  const handleSaveSmtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSmtp(true);
+    try {
+      const updated = await settingsService.updateSettings({
+        smtpUser,
+        smtpPass,
+      });
+      setSettings(updated);
+      toast.success("Credenciales de correo emisor (SMTP) guardadas correctamente.");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Error al actualizar la configuración SMTP.";
+      toast.error(message);
+    } finally {
+      setSavingSmtp(false);
     }
   };
 
@@ -350,8 +372,8 @@ export const SettingsPage = () => {
                     <img src={`${API_URL}${settings.systemLogo}`} alt="System Logo" />
                   ) : (
                     <div className="settings-asset-placeholder" style={{ gap: "4px" }}>
-                      <img src={theme === "dark" ? darkLogo : lightLogo} alt="System Logo Default" style={{ maxHeight: "42px", width: "auto" }} />
-                      <span style={{ fontSize: "0.68rem", opacity: 0.7 }}>Logo por defecto (Modo {theme === "dark" ? "Oscuro" : "Claro"})</span>
+                      <img src={defaultLogo} alt="System Logo Default" style={{ maxHeight: "42px", width: "auto" }} />
+                      <span style={{ fontSize: "0.68rem", opacity: 0.7 }}>Logo por defecto</span>
                     </div>
                   )}
                 </div>
@@ -432,6 +454,59 @@ export const SettingsPage = () => {
 
         {activeTab === "sistema" && (
           <div className="settings-system-panel">
+            {/* SMTP Settings Form */}
+            <form className="settings-form" onSubmit={handleSaveSmtp} style={{ marginBottom: "32px", paddingBottom: "32px", borderBottom: "1px solid var(--glass-border)" }}>
+              <h2 className="settings-panel-title">Configuración de Correo Emisor (SMTP)</h2>
+              <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginBottom: "20px" }}>
+                Define las credenciales del correo que utilizará el sistema para enviar los enlaces de recuperación de contraseña.
+              </p>
+              
+              <div className="settings-form-grid">
+                <div className="settings-form-group">
+                  <label>Correo Electrónico Emisor</label>
+                  <div className="settings-input-wrapper">
+                    <Mail size={16} />
+                    <input
+                      type="email"
+                      value={smtpUser}
+                      onChange={(e) => setSmtpUser(e.target.value)}
+                      placeholder="Ej. miempresa@gmail.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="settings-form-group">
+                  <label>Contraseña de Aplicación (SMTP)</label>
+                  <div className="settings-input-wrapper">
+                    <Save size={16} />
+                    <input
+                      type="password"
+                      value={smtpPass}
+                      onChange={(e) => setSmtpPass(e.target.value)}
+                      placeholder="Contraseña o clave de aplicación"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="settings-form-actions" style={{ marginTop: "16px" }}>
+                <button
+                  type="submit"
+                  className="settings-action-btn settings-action-btn--primary"
+                  disabled={savingSmtp}
+                >
+                  {savingSmtp ? (
+                    <span className="settings-spinner" />
+                  ) : (
+                    <>
+                      <Save size={18} />
+                      Guardar Credenciales
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
             <h2 className="settings-panel-title">Mantenimiento y Copias de Seguridad</h2>
             
             <div className="settings-system-grid">

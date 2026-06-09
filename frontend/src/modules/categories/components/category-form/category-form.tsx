@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Tag, Loader2 } from "lucide-react";
+import { X, Tag, Loader2, AlignLeft } from "lucide-react";
 import { useForm }          from "react-hook-form";
 import { z }                from "zod";
 import { zodResolver }      from "@hookform/resolvers/zod";
@@ -12,7 +12,6 @@ import type { Category }     from "../../types/category.types";
 
 import "./category-form.scss";
 
-/* ── Validación con mensajes claros ── */
 const schema = z.object({
   name: z
     .string()
@@ -72,24 +71,16 @@ export const CategoryForm = ({ mode, initialData, onClose, onSuccess }: Props) =
       } else if (initialData) {
         await categoriesService.updateCategory(initialData.id, data);
       }
-
       toast.success(
-        mode === "create"
-          ? "Categoría creada correctamente"
-          : "Categoría actualizada correctamente"
+        mode === "create" ? "Categoría creada correctamente" : "Categoría actualizada correctamente"
       );
-
       onSuccess();
       onClose();
-
     } catch (error: unknown) {
-      /* Mensaje del servidor o genérico */
       const axiosErr = error as { response?: { data?: { message?: string } } };
       const msg: string =
         axiosErr.response?.data?.message ||
         (error instanceof Error ? error.message : "Ocurrió un error inesperado.");
-
-      /* Si el error menciona el nombre, lo mostramos en el campo */
       if (msg.toLowerCase().includes("nombre")) {
         setError("name", { message: msg });
       } else {
@@ -123,13 +114,11 @@ export const CategoryForm = ({ mode, initialData, onClose, onSuccess }: Props) =
             transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
             onClick={(e) => e.stopPropagation()}
           >
-
             {/* Cabecera */}
             <div className="category-form-header">
               <div className="category-form-header__icon">
                 <Tag size={20} />
               </div>
-
               <div>
                 <h2>{mode === "create" ? "Nueva categoría" : "Editar categoría"}</h2>
                 <p>
@@ -138,7 +127,6 @@ export const CategoryForm = ({ mode, initialData, onClose, onSuccess }: Props) =
                     : "Modifica los datos de la categoría."}
                 </p>
               </div>
-
               <button className="category-form-close" onClick={onClose} type="button">
                 <X size={18} />
               </button>
@@ -146,79 +134,85 @@ export const CategoryForm = ({ mode, initialData, onClose, onSuccess }: Props) =
 
             {/* Formulario */}
             <form className="category-form" onSubmit={handleSubmit(handlePreSubmit)} noValidate>
-
               <div className="category-form-scroll-area">
-                {/* Nombre */}
-                <div className="form-group">
-                  <label htmlFor="cat-name">
-                    Nombre <span className="form-required">*</span>
-                  </label>
-                  <input
-                    id="cat-name"
-                    type="text"
-                    placeholder="Ej: Sellos de Goma"
-                    autoFocus
-                    autoComplete="off"
-                    {...register("name")}
-                  />
-                  {errors.name && (
-                    <span className="form-error" role="alert">{errors.name.message}</span>
-                  )}
-                </div>
 
-                {/* Descripción */}
-                <div className="form-group">
-                  <label htmlFor="cat-desc">Descripción</label>
-                  <textarea
-                    id="cat-desc"
-                    placeholder="Descripción opcional (máx. 300 caracteres)..."
-                    rows={3}
-                    autoComplete="off"
-                    {...register("description")}
-                  />
-                  {errors.description && (
-                    <span className="form-error" role="alert">{errors.description.message}</span>
-                  )}
-                </div>
+                {/* Sección 1: Datos de la Categoría */}
+                <div className="form-section-card">
+                  <div className="section-title-row">
+                    <span className="section-num"><Tag size={13} /></span>
+                    <h3>Datos de la Categoría</h3>
+                  </div>
 
-                {/* Estado (solo visible en modo edición) */}
-                {mode === "edit" && (
+                  {/* Nombre */}
                   <div className="form-group">
-                    <label htmlFor="cat-status">Estado</label>
-                    <div className="status-toggle-wrapper">
-                      <label className="toggle-switch">
-                        <input
-                          id="cat-status"
-                          type="checkbox"
-                          checked={statusValue === "ACTIVE"}
-                          onChange={(e) =>
-                            setValue("status", e.target.checked ? "ACTIVE" : "INACTIVE")
-                          }
-                        />
-                        <span className="toggle-slider" />
-                      </label>
-                      <span className={`status-label ${statusValue === "ACTIVE" ? "status-label--active" : "status-label--inactive"}`}>
-                        {statusValue === "ACTIVE" ? "Activo" : "Inactivo"}
-                      </span>
-                    </div>
-                    {errors.status && (
-                      <span className="form-error" role="alert">{errors.status.message}</span>
+                    <label htmlFor="cat-name">
+                      Nombre <span className="form-required">*</span>
+                    </label>
+                    <input
+                      id="cat-name"
+                      type="text"
+                      placeholder="Ej: Sellos de Goma"
+                      autoFocus
+                      autoComplete="off"
+                      {...register("name")}
+                    />
+                    {errors.name && (
+                      <span className="form-error" role="alert">{errors.name.message}</span>
                     )}
                   </div>
-                )}
+
+                  {/* Descripción */}
+                  <div className="form-group">
+                    <label htmlFor="cat-desc">
+                      <AlignLeft size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
+                      Descripción
+                    </label>
+                    <textarea
+                      id="cat-desc"
+                      placeholder="Descripción opcional (máx. 300 caracteres)..."
+                      rows={3}
+                      autoComplete="off"
+                      {...register("description")}
+                    />
+                    {errors.description && (
+                      <span className="form-error" role="alert">{errors.description.message}</span>
+                    )}
+                  </div>
+
+                  {/* Estado (solo visible en modo edición) */}
+                  {mode === "edit" && (
+                    <div className="form-group">
+                      <label htmlFor="cat-status">Estado</label>
+                      <div className="status-toggle-wrapper">
+                        <label className="toggle-switch">
+                          <input
+                            id="cat-status"
+                            type="checkbox"
+                            checked={statusValue === "ACTIVE"}
+                            onChange={(e) =>
+                              setValue("status", e.target.checked ? "ACTIVE" : "INACTIVE")
+                            }
+                          />
+                          <span className="toggle-slider" />
+                        </label>
+                        <span className={`status-label ${statusValue === "ACTIVE" ? "status-label--active" : "status-label--inactive"}`}>
+                          {statusValue === "ACTIVE" ? "Activo" : "Inactivo"}
+                        </span>
+                      </div>
+                      {errors.status && (
+                        <span className="form-error" role="alert">{errors.status.message}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
               </div>
 
               {/* Acciones */}
               <div className="category-form-actions">
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={onClose}
-                  disabled={isSubmitting}
-                >
+                <button type="button" className="btn-cancel" onClick={onClose} disabled={isSubmitting}>
                   Cancelar
                 </button>
-
                 <button type="submit" className="btn-save" disabled={isSubmitting}>
                   {isSubmitting
                     ? <><Loader2 size={16} className="spin" /> Guardando...</>
@@ -226,9 +220,7 @@ export const CategoryForm = ({ mode, initialData, onClose, onSuccess }: Props) =
                   }
                 </button>
               </div>
-
             </form>
-
           </motion.div>
         </motion.div>
       </AnimatePresence>

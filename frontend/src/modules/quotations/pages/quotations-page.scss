@@ -741,7 +741,7 @@
 /* ── Fila de items del creador ── */
 .quotation-form-item-row {
   display: grid;
-  grid-template-columns: 2.5fr 80px 120px 120px 40px;
+  grid-template-columns: 1.8fr 2.2fr 80px 110px 110px 40px;
   align-items: center;
   gap: 12px;
   width: 100%;
@@ -758,12 +758,27 @@
       color: var(--text-secondary);
     }
 
-    input {
+    input, select {
       padding: 10px 12px;
       font-size: 0.88rem;
       border-radius: 10px;
       width: 100%;
       box-sizing: border-box;
+      outline: none;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+      transition: all 0.2s ease;
+
+      &:focus {
+        border-color: var(--primary-shadow);
+        box-shadow: 0 0 0 3px var(--primary-shadow);
+      }
+
+      option {
+        background: var(--modal-bg, #0d0d0d);
+        color: var(--text-primary);
+      }
     }
   }
 
@@ -846,9 +861,9 @@
     }
   }
   .quotation-form-item-row {
-    grid-template-columns: 2.5fr 70px 100px 100px 36px;
+    grid-template-columns: 1.8fr 2.2fr 70px 100px 100px 36px;
     gap: 10px;
-    .form-group input {
+    .form-group input, .form-group select {
       padding: 8px 10px;
       font-size: 0.84rem;
     }
@@ -884,9 +899,9 @@
     .btn-cancel, .btn-save { height: 34px; font-size: 0.8rem; border-radius: 10px; }
   }
   .quotation-form-item-row {
-    grid-template-columns: 2.5fr 60px 90px 90px 32px;
+    grid-template-columns: 1.8fr 2.2fr 60px 90px 90px 32px;
     gap: 8px;
-    .form-group input {
+    .form-group input, .form-group select {
       padding: 6px 8px;
       font-size: 0.8rem;
     }
@@ -966,3 +981,144 @@
   }
 }
 
+[data-theme="light"] {
+  .quotation-form-modal {
+    .form-group select {
+      background: rgba(255, 255, 255, 0.85) !important;
+      border: 1px solid rgba(15, 23, 42, 0.08) !important;
+      color: #0f172a !important;
+      option {
+        background: #ffffff !important;
+        color: #0f172a !important;
+      }
+    }
+  }
+}
+
+/* ── Searchable Catalog Autocomplete ── */
+.catalog-search-container {
+  position: relative;
+  width: 100%;
+
+  .catalog-suggestions-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: var(--modal-bg, #111827);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    /* Scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+    &::-webkit-scrollbar { width: 5px; }
+    &::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+
+    .suggestion-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+
+      &:hover {
+        background: var(--glass-active);
+      }
+
+      .suggestion-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 70%;
+      }
+
+      .suggestion-price {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--primary-color);
+      }
+
+      &--empty {
+        justify-content: center;
+        color: var(--text-secondary);
+        font-size: 0.82rem;
+        font-style: italic;
+        cursor: default;
+        background: transparent !important;
+      }
+    }
+  }
+}
+
+[data-theme="light"] {
+  .catalog-search-container {
+    .catalog-suggestions-dropdown {
+      background: #ffffff;
+      border-color: rgba(15, 23, 42, 0.1);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.08);
+
+      .suggestion-item {
+        &:hover {
+          background: rgba(15, 23, 42, 0.04);
+        }
+        .suggestion-label {
+          color: #0f172a;
+        }
+      }
+    }
+  }
+}
+
+/* ── Botón de búsqueda por documento ── */
+.btn-search-doc {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--primary-gradient);
+  color: var(--primary-text);
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* ── Inputs inside quotation modal form-grid fill column naturally ── */
+.quotation-form-modal {
+  .form-grid .form-group input,
+  .form-grid .form-group select,
+  .form-grid .form-group textarea,
+  .form-row-three .form-group input,
+  .form-row-three .form-group select {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}

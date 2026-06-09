@@ -35,6 +35,19 @@ export async function clientsRoutes(app: FastifyInstance) {
     }
   );
 
+  /* GET /clients/lookup */
+  app.get(
+    "/lookup",
+    { preHandler: requirePermission("Clientes") },
+    async (request, reply) => {
+      try {
+        await ClientController.lookup(request, reply);
+      } catch (error) {
+        return handleError(error, reply, "Error al consultar documento.");
+      }
+    }
+  );
+
   /* GET /clients */
   app.get(
     "/",

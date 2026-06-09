@@ -396,3 +396,176 @@ table tbody td {
     }
   }
 }
+
+/* =========================================
+   ESTANDARIZACIÓN DE TAMAÑOS DE FORMULARIOS
+   ========================================= */
+
+/* Campos de texto y selectores no excesivamente largos */
+.form-group {
+  input,
+  select {
+    width: 100% !important;
+    max-width: 440px !important; /* Ancho de campo óptimo para que no se estire excesivamente */
+  }
+
+  textarea {
+    width: 100% !important;
+    max-width: 580px !important; /* Más ancho para descripciones, pero acotado a un tamaño premium */
+  }
+
+  /* Excepciones donde los campos deben llenar su columna/celda natural */
+  &.form-group--compact,
+  .catalog-search-container input,
+  .quotation-form-item-row .form-group input,
+  .quotation-form-item-row .form-group select {
+    max-width: 100% !important;
+  }
+}
+
+/* Grilla de dos columnas uniforme para todos los formularios */
+.form-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+  width: 100% !important;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+.form-group--full {
+  grid-column: 1 / -1 !important;
+}
+
+/* Tarjetas de sección (Form Section Cards) y títulos estandarizados */
+.form-section-card {
+  background: rgba(255, 255, 255, 0.015) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 20px !important;
+  padding: 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 16px !important;
+  box-sizing: border-box !important;
+}
+
+[data-theme="light"] .form-section-card {
+  background: rgba(15, 23, 42, 0.005) !important;
+}
+
+.section-title-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border-bottom: 1px solid var(--glass-border) !important;
+  padding-bottom: 10px !important;
+  margin-bottom: 4px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+
+  h3 {
+    font-size: 0.96rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary) !important;
+    margin: 0 !important;
+  }
+}
+
+.section-num {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  background: var(--primary-gradient) !important;
+  color: var(--primary-text) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  flex-shrink: 0 !important;
+
+  svg {
+    width: 13px !important;
+    height: 13px !important;
+    color: currentColor !important;
+  }
+}
+
+.section-subtitle {
+  font-size: 0.8rem !important;
+  color: var(--text-secondary) !important;
+  margin-top: -8px !important;
+  margin-bottom: 4px !important;
+}
+
+/* Botones de acción elegantes, compactos y con texto pequeño */
+.btn-cancel,
+.btn-save,
+.cancel-btn,
+.save-btn,
+.action-btn {
+  flex: none !important;
+  width: auto !important;
+  min-width: 120px !important;
+  height: 40px !important; /* Altura compacta estilizada */
+  padding: 0 20px !important;
+  font-size: 0.82rem !important; /* Texto pequeño como pidió el usuario */
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  box-sizing: border-box !important;
+  transform: none !important; /* Evita saltos de escala excesivos */
+}
+
+/* Contenedores de acciones alineados a la derecha y sin estirar los botones */
+.product-form-actions,
+.user-form-actions,
+.role-form-actions,
+.client-form-actions,
+.supply-form-actions,
+.category-form-actions,
+.presentation-form-actions,
+.quotation-form-actions,
+.extra-form-actions,
+.product-extras-modal__footer {
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  margin-top: 20px !important;
+  padding-top: 16px !important;
+  border-top: 1px solid var(--glass-border) !important;
+}
+
+/* En vista móvil los botones se apilan ordenadamente de forma adaptada */
+@media (max-width: 768px) {
+  .product-form-actions,
+  .user-form-actions,
+  .role-form-actions,
+  .client-form-actions,
+  .supply-form-actions,
+  .category-form-actions,
+  .presentation-form-actions,
+  .quotation-form-actions,
+  .extra-form-actions,
+  .product-extras-modal__footer {
+    flex-direction: column-reverse !important;
+    gap: 10px !important;
+
+    .btn-cancel,
+    .btn-save,
+    .cancel-btn,
+    .save-btn,
+    .action-btn {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+  }
+}

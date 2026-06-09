@@ -7,4 +7,6 @@ export interface UpdateSettingsDTO {
   systemLogo?: string;
   yapeQr?: string;
   plinQr?: string;
+  smtpUser?: string;
+  smtpPass?: string;
 }

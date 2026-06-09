@@ -1,6 +1,7 @@
 import { eq, desc, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { quotations, quotationItems } from "../../db/schema/quotations";
+import { clients } from "../../db/schema/clients";
 import type { CreateQuotationDTO, UpdateQuotationDTO } from "./quotations.types";
 
 const VALID_STATUSES: readonly string[] = ["PENDING", "APPROVED", "REJECTED", "EXPIRED"] as const;
@@ -92,13 +93,48 @@ export const quotationsService = {
     const tax      = data.tax ?? 18; // default 18% IGV
     const { subtotal, total } = calcTotals(parsedItems, discount, tax);
 
+    // ── Auto-register client if not exists ──
+    const doc = data.clientDocument.trim();
+    let clientId = data.clientId ?? null;
+    if (doc) {
+      const [existingClient] = await db
+        .select()
+        .from(clients)
+        .where(eq(clients.document, doc));
+      
+      if (existingClient) {
+        clientId = existingClient.id;
+      } else {
+        const docType = doc.length === 11 ? "RUC" : "DNI";
+        const clientType = docType === "RUC" ? "EMPRESA" : "PARTICULAR";
+        try {
+          const [newClient] = await db
+            .insert(clients)
+            .values({
+              name: data.clientName.trim(),
+              documentType: docType,
+              document: doc,
+              phone: data.clientPhone?.trim() || null,
+              email: data.clientEmail?.trim() || null,
+              address: data.clientAddress?.trim() || null,
+              type: clientType,
+              status: "ACTIVE",
+            })
+            .returning();
+          clientId = newClient.id;
+        } catch (err) {
+          console.error("Error auto-registering client:", err);
+        }
+      }
+    }
+
     const quotationNumber = await nextQuotationNumber();
 
     const [newQuotation] = await db
       .insert(quotations)
       .values({
         quotationNumber,
-        clientId:       data.clientId ?? null,
+        clientId,
         clientName:     data.clientName.trim(),
         clientDocument: data.clientDocument.trim(),
         clientPhone:    data.clientPhone?.trim() || null,
@@ -139,6 +175,42 @@ export const quotationsService = {
     }
 
     const patch: Record<string, any> = { updatedAt: new Date() };
+
+    // ── Auto-register client if not exists on update ──
+    let clientId = data.clientId;
+    const doc = data.clientDocument?.trim() ?? existing.clientDocument;
+    if (clientId === undefined && doc) {
+      const [existingClient] = await db
+        .select()
+        .from(clients)
+        .where(eq(clients.document, doc));
+      if (existingClient) {
+        clientId = existingClient.id;
+      } else if (data.clientName || existing.clientName) {
+        const docType = doc.length === 11 ? "RUC" : "DNI";
+        const clientType = docType === "RUC" ? "EMPRESA" : "PARTICULAR";
+        try {
+          const [newClient] = await db
+            .insert(clients)
+            .values({
+              name: (data.clientName ?? existing.clientName).trim(),
+              documentType: docType,
+              document: doc,
+              phone: data.clientPhone !== undefined ? data.clientPhone?.trim() : existing.clientPhone,
+              email: data.clientEmail !== undefined ? data.clientEmail?.trim() : existing.clientEmail,
+              address: data.clientAddress !== undefined ? data.clientAddress?.trim() : existing.clientAddress,
+              type: clientType,
+              status: "ACTIVE",
+            })
+            .returning();
+          clientId = newClient.id;
+        } catch (err) {
+          console.error("Error auto-registering client on update:", err);
+        }
+      }
+    }
+
+    if (clientId !== undefined) patch.clientId = clientId;
 
     if (data.clientName     !== undefined) patch.clientName     = data.clientName.trim();
     if (data.clientDocument !== undefined) patch.clientDocument = data.clientDocument.trim();

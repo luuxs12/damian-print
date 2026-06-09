@@ -21,10 +21,8 @@ import { toast } from "sonner";
 
 import { useAuthStore } from "@/modules/auth/store/auth-store";
 
-import darkLogo from "@/assets/images/branding/logo-dark.png";
-import lightLogo from "@/assets/images/branding/logo-light.png";
+import defaultLogo from "@/assets/images/branding/tulogoaqui.png";
 
-import { useTheme } from "@/app/providers/theme-provider";
 import { settingsService } from "@/modules/settings/services/settings-service";
 
 import "./sidebar.scss";
@@ -52,7 +50,6 @@ interface SidebarProps {
 }
 
 export const Sidebar = ({ onClose, collapsed = false, onToggleCollapse }: SidebarProps) => {
-  const { theme }  = useTheme();
   const session    = useAuthStore((state) => state.session);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
@@ -77,7 +74,7 @@ export const Sidebar = ({ onClose, collapsed = false, onToggleCollapse }: Sideba
       {/* Logo / Hamburger */}
       <div className="sidebar-logo">
         <img
-          src={logoUrl || (theme === "dark" ? darkLogo : lightLogo)}
+          src={logoUrl || defaultLogo}
           alt="Damian Print"
           className="sidebar-logo-image"
         />

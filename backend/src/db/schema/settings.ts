@@ -12,6 +12,8 @@ export const settings = pgTable(
     systemLogo:     text("system_logo"),
     yapeQr:         text("yape_qr"),
     plinQr:         text("plin_qr"),
+    smtpUser:       text("smtp_user"),
+    smtpPass:       text("smtp_pass"),
     updatedAt:      timestamp("updated_at").defaultNow(),
   }
 );

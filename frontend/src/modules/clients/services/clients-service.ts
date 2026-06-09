@@ -55,4 +55,9 @@ export const clientsService = {
   async deleteClient(id: number): Promise<void> {
     await api.delete(`/clients/${id}`);
   },
+
+  async lookupDocument(documentType: string, document: string): Promise<{ success: boolean; name: string; address?: string; city?: string }> {
+    const res = await api.get("/clients/lookup", { params: { documentType, document } });
+    return res.data;
+  },
 };

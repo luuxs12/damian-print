@@ -18,9 +18,7 @@ import {
   Outlet,
 } from "react-router-dom";
 
-import logoDark from "@/assets/images/branding/logo-dark.png";
-
-import logoLight from "@/assets/images/branding/logo-light.png";
+import defaultLogo from "@/assets/images/branding/tulogoaqui.png";
 
 import {
   useTheme,
@@ -158,11 +156,7 @@ export const AuthLayout = () => {
           <div className="brand-glow" />
 
           <img
-            src={
-              theme === "dark"
-                ? logoDark
-                : logoLight
-            }
+            src={defaultLogo}
             alt="Damian Print"
           />
 

@@ -8,6 +8,7 @@ import {
   toggleClientStatus,
   deleteClient,
   getClientsStats,
+  lookupDocument,
 } from "./clients.service";
 import { auditLogsService } from "../audit-logs/audit-logs.service";
 
@@ -131,5 +132,14 @@ export const ClientController = {
     }
 
     return reply.send({ success: true });
+  },
+
+  async lookup(request: FastifyRequest, reply: FastifyReply) {
+    const { documentType, document } = request.query as { documentType: string; document: string };
+    if (!documentType || !document) {
+      return reply.status(400).send({ message: "Se requieren los parámetros documentType y document." });
+    }
+    const data = await lookupDocument(documentType, document);
+    return reply.send(data);
   },
 };

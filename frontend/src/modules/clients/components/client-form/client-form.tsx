@@ -12,7 +12,6 @@ import type { Client }     from "../../types/client.types";
 
 import "./client-form.scss";
 
-/* ── Schema de validación ── */
 const schema = z.object({
   type: z.enum(["EMPRESA", "PARTICULAR"] as const, { message: "Selecciona un tipo." }),
 
@@ -23,20 +22,20 @@ const schema = z.object({
     .max(150, "El nombre no puede superar los 150 caracteres.")
     .refine((v) => v.trim().length > 0, "El nombre no puede ser solo espacios."),
 
-  documentType: z.enum(["DNI", "RUC", "CE", "PASAPORTE"] as const, { message: "Selecciona un tipo de documento." }),
+  documentType: z.enum(["DNI", "RUC"] as const, { message: "Selecciona un tipo de documento." }),
 
   document: z
     .string()
     .min(1, "El número de documento es obligatorio.")
     .max(20, "El documento es demasiado largo."),
 
-  phone: z.string().max(20, "El teléfono es demasiado largo.").optional(),
-  email: z.string().email("Ingresa un email válido.").optional().or(z.literal("")),
-  address: z.string().max(200, "La dirección es demasiado larga.").optional(),
-  city:    z.string().max(80, "La ciudad es demasiado larga.").optional(),
+  phone:       z.string().max(20, "El teléfono es demasiado largo.").optional(),
+  email:       z.string().email("Ingresa un email válido.").optional().or(z.literal("")),
+  address:     z.string().max(200, "La dirección es demasiado larga.").optional(),
+  city:        z.string().max(80, "La ciudad es demasiado larga.").optional(),
   contactName: z.string().max(100, "El nombre del contacto es demasiado largo.").optional(),
-  notes:   z.string().max(500, "Las notas no pueden superar 500 caracteres.").optional(),
-  status:  z.enum(["ACTIVE", "INACTIVE"]).optional(),
+  notes:       z.string().max(500, "Las notas no pueden superar 500 caracteres.").optional(),
+  status:      z.enum(["ACTIVE", "INACTIVE"]).optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -51,6 +50,7 @@ interface Props {
 export const ClientForm = ({ mode, initialData, onClose, onSuccess }: Props) => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
+  const [isSearchingDoc, setIsSearchingDoc] = useState(false);
 
   const {
     register,
@@ -64,7 +64,7 @@ export const ClientForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
     defaultValues: {
       type:         initialData?.type         ?? "PARTICULAR",
       name:         initialData?.name         ?? "",
-      documentType: initialData?.documentType ?? "DNI",
+      documentType: (initialData?.documentType === "RUC" ? "RUC" : "DNI") as "DNI" | "RUC",
       document:     initialData?.document     ?? "",
       phone:        initialData?.phone        ?? "",
       email:        initialData?.email        ?? "",
@@ -76,10 +76,10 @@ export const ClientForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
     },
   });
 
-  const selectedType = useWatch({ control, name: "type" });
+  const selectedType    = useWatch({ control, name: "type" });
   const selectedDocType = watch("documentType");
-  const statusValue  = watch("status");
-  const notesValue   = watch("notes") ?? "";
+  const statusValue     = watch("status");
+  const notesValue      = watch("notes") ?? "";
 
   const handlePreSubmit = (data: FormData) => {
     setPendingData(data);
@@ -101,13 +101,11 @@ export const ClientForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
         notes:        data.notes || undefined,
         status:       data.status,
       };
-
       if (mode === "create") {
         await clientsService.createClient(payload);
       } else if (initialData) {
         await clientsService.updateClient(initialData.id, payload);
       }
-
       onSuccess();
     } catch (error: unknown) {
       const axiosErr = error as { response?: { data?: { message?: string } } };
@@ -161,151 +159,189 @@ export const ClientForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
 
             {/* Formulario */}
             <form className="client-form" onSubmit={handleSubmit(handlePreSubmit)} noValidate>
-              
               <div className="client-form-scroll-area">
-                {/* Sección 1: Identificación */}
-                <div className="client-form-section-title">
-                  <UserRound size={15} />
-                  <span>Identificación</span>
-                </div>
 
-                {/* Tipo de cliente */}
-                <div className="form-group">
-                  <label>Tipo de cliente <span className="form-required">*</span></label>
-                  <div className="type-toggle">
-                    {(["PARTICULAR", "EMPRESA"] as const).map((t) => (
-                      <button
-                        key={t}
-                        type="button"
-                        className={`type-toggle__btn ${selectedType === t ? "type-toggle__btn--active" : ""}`}
-                        onClick={() => setValue("type", t)}
-                      >
-                        {t === "PARTICULAR" ? "👤 Particular" : "🏢 Empresa"}
-                      </button>
-                    ))}
+                {/* ── Sección 1: Identificación ── */}
+                <div className="form-section-card">
+                  <div className="section-title-row">
+                    <span className="section-num"><UserRound size={13} /></span>
+                    <h3>Identificación</h3>
                   </div>
-                  {errors.type && <span className="form-error">{errors.type.message}</span>}
-                </div>
 
-                {/* Fila 1: Nombre */}
-                <div className="form-group">
-                  <label htmlFor="cli-name">
-                    {selectedType === "EMPRESA" ? "Razón Social" : "Nombre completo"}
-                    <span className="form-required"> *</span>
-                  </label>
-                  <input
-                    id="cli-name"
-                    type="text"
-                    placeholder={selectedType === "EMPRESA" ? "Ej: Gráfica Creativa EIRL" : "Ej: Juan Pérez Gómez"}
-                    autoFocus
-                    autoComplete="off"
-                    {...register("name")}
-                  />
-                  {errors.name && <span className="form-error">{errors.name.message}</span>}
-                </div>
-
-                {/* Fila 2: Tipo documento + Número */}
-                <div className="form-row">
-                  <div className="form-group form-group--sm">
-                    <label htmlFor="cli-doctype">Tipo documento <span className="form-required">*</span></label>
-                    <select id="cli-doctype" {...register("documentType")}>
-                      <option value="DNI">DNI</option>
-                      <option value="RUC">RUC</option>
-                      <option value="CE">C. Extranjería</option>
-                      <option value="PASAPORTE">Pasaporte</option>
-                    </select>
-                    {errors.documentType && <span className="form-error">{errors.documentType.message}</span>}
-                  </div>
+                  {/* Tipo de cliente */}
                   <div className="form-group">
-                    <label htmlFor="cli-doc">Número de documento <span className="form-required">*</span></label>
+                    <label>Tipo de cliente <span className="form-required">*</span></label>
+                    <div className="type-toggle">
+                      {(["PARTICULAR", "EMPRESA"] as const).map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          className={`type-toggle__btn ${selectedType === t ? "type-toggle__btn--active" : ""}`}
+                          onClick={() => setValue("type", t)}
+                        >
+                          {t === "PARTICULAR" ? "👤 Particular" : "🏢 Empresa"}
+                        </button>
+                      ))}
+                    </div>
+                    {errors.type && <span className="form-error">{errors.type.message}</span>}
+                  </div>
+
+                  {/* Nombre */}
+                  <div className="form-group">
+                    <label htmlFor="cli-name">
+                      {selectedType === "EMPRESA" ? "Razón Social" : "Nombre completo"}
+                      <span className="form-required"> *</span>
+                    </label>
                     <input
-                      id="cli-doc"
+                      id="cli-name"
                       type="text"
-                      placeholder={
-                        selectedDocType === "DNI" ? "Ej: 12345678 (8 dígitos)" :
-                        selectedDocType === "RUC" ? "Ej: 20123456789 (11 dígitos)" :
-                        selectedDocType === "CE" ? "Ej: 001234567 (9 dígitos)" :
-                        "Ej: Número de documento"
-                      }
+                      placeholder={selectedType === "EMPRESA" ? "Ej: Gráfica Creativa EIRL" : "Ej: Juan Pérez Gómez"}
+                      autoFocus
                       autoComplete="off"
-                      {...register("document")}
+                      {...register("name")}
                     />
-                    {errors.document && <span className="form-error">{errors.document.message}</span>}
+                    {errors.name && <span className="form-error">{errors.name.message}</span>}
                   </div>
-                </div>
 
-                {/* Sección 2: Contacto y Ubicación */}
-                <div className="client-form-section-title">
-                  <MapPin size={15} />
-                  <span>Contacto y Ubicación</span>
-                </div>
+                  {/* Tipo documento + Número */}
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label htmlFor="cli-doctype">Tipo documento <span className="form-required">*</span></label>
+                      <select id="cli-doctype" {...register("documentType")}>
+                        <option value="DNI">DNI</option>
+                        <option value="RUC">RUC</option>
+                      </select>
+                      {errors.documentType && <span className="form-error">{errors.documentType.message}</span>}
+                    </div>
 
-                {/* Fila 3: Teléfono + Email */}
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="cli-phone">Teléfono</label>
-                    <input id="cli-phone" type="tel" placeholder="Ej: 987 654 321" autoComplete="off" {...register("phone")} />
-                    {errors.phone && <span className="form-error">{errors.phone.message}</span>}
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="cli-email">Email</label>
-                    <input id="cli-email" type="email" placeholder="Ej: contacto@empresa.pe" autoComplete="off" {...register("email")} />
-                    {errors.email && <span className="form-error">{errors.email.message}</span>}
-                  </div>
-                </div>
-
-                {/* Fila 4: Dirección + Ciudad */}
-                <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="cli-address">Dirección</label>
-                    <input id="cli-address" type="text" placeholder="Ej: Av. Arequipa 1234" autoComplete="off" {...register("address")} />
-                  </div>
-                  <div className="form-group form-group--sm">
-                    <label htmlFor="cli-city">Ciudad</label>
-                    <input id="cli-city" type="text" placeholder="Ej: Lima" autoComplete="off" {...register("city")} />
-                  </div>
-                </div>
-
-                {/* Contacto (solo empresa) */}
-                {selectedType === "EMPRESA" && (
-                  <div className="form-group">
-                    <label htmlFor="cli-contact">Persona de contacto</label>
-                    <input id="cli-contact" type="text" placeholder="Ej: Área de Compras" autoComplete="off" {...register("contactName")} />
-                  </div>
-                )}
-
-                {/* Sección 3: Otros Datos */}
-                <div className="client-form-section-title">
-                  <FileText size={15} />
-                  <span>Otros Datos</span>
-                </div>
-
-                {/* Notas */}
-                <div className="form-group">
-                  <label htmlFor="cli-notes">Observaciones</label>
-                  <textarea id="cli-notes" rows={2} placeholder="Notas adicionales sobre el cliente..." autoComplete="off" {...register("notes")} />
-                  <span className="form-char-count">{notesValue.length}/500</span>
-                </div>
-
-                {/* Estado (solo edición) */}
-                {mode === "edit" && (
-                  <div className="form-group">
-                    <label>Estado del cliente</label>
-                    <div className="status-toggle-wrapper">
-                      <label className="toggle-switch">
+                    <div className="form-group">
+                      <label htmlFor="cli-doc">Número de documento <span className="form-required">*</span></label>
+                      <div style={{ display: "flex", gap: "8px" }}>
                         <input
-                          type="checkbox"
-                          checked={statusValue === "ACTIVE"}
-                          onChange={(e) => setValue("status", e.target.checked ? "ACTIVE" : "INACTIVE")}
+                          id="cli-doc"
+                          type="text"
+                          placeholder={selectedDocType === "DNI" ? "Ej: 12345678 (8 dígitos)" : "Ej: 20123456789 (11 dígitos)"}
+                          autoComplete="off"
+                          style={{ flex: 1, maxWidth: "none" }}
+                          {...register("document")}
                         />
-                        <span className="toggle-slider" />
-                      </label>
-                      <span className={`status-label ${statusValue === "ACTIVE" ? "status-label--active" : "status-label--inactive"}`}>
-                        {statusValue === "ACTIVE" ? "Activo" : "Inactivo"}
-                      </span>
+                        {(selectedDocType === "DNI" || selectedDocType === "RUC") && (
+                          <button
+                            type="button"
+                            className="btn-search-doc"
+                            onClick={async () => {
+                              const doc = watch("document");
+                              if (!doc || doc.trim().length < 8) {
+                                toast.error("Por favor, ingrese un número de documento válido.");
+                                return;
+                              }
+                              setIsSearchingDoc(true);
+                              try {
+                                const result = await clientsService.lookupDocument(selectedDocType, doc);
+                                if (result && result.name) {
+                                  setValue("name", result.name);
+                                  if (result.address) setValue("address", result.address);
+                                  if (result.city)    setValue("city", result.city);
+                                  toast.success("Datos obtenidos desde RENIEC/SUNAT correctamente.");
+                                } else {
+                                  toast.error("No se encontraron resultados para el documento.");
+                                }
+                              } catch (error: unknown) {
+                                const err = error as { response?: { data?: { message?: string } }; message?: string };
+                                toast.error(err.response?.data?.message || err.message || "Error al realizar la consulta.");
+                              } finally {
+                                setIsSearchingDoc(false);
+                              }
+                            }}
+                            disabled={isSearchingDoc}
+                          >
+                            {isSearchingDoc ? <Loader2 size={16} className="spin" /> : "Buscar"}
+                          </button>
+                        )}
+                      </div>
+                      {errors.document && <span className="form-error">{errors.document.message}</span>}
                     </div>
                   </div>
-                )}
+                </div>
+
+                {/* ── Sección 2: Contacto y Ubicación ── */}
+                <div className="form-section-card">
+                  <div className="section-title-row">
+                    <span className="section-num"><MapPin size={13} /></span>
+                    <h3>Contacto y Ubicación</h3>
+                  </div>
+
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label htmlFor="cli-phone">Teléfono</label>
+                      <input id="cli-phone" type="tel" placeholder="Ej: 987 654 321" autoComplete="off" {...register("phone")} />
+                      {errors.phone && <span className="form-error">{errors.phone.message}</span>}
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="cli-email">Email</label>
+                      <input id="cli-email" type="email" placeholder="Ej: contacto@empresa.pe" autoComplete="off" {...register("email")} />
+                      {errors.email && <span className="form-error">{errors.email.message}</span>}
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="cli-address">Dirección</label>
+                      <input id="cli-address" type="text" placeholder="Ej: Av. Arequipa 1234" autoComplete="off" {...register("address")} />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="cli-city">Ciudad</label>
+                      <input id="cli-city" type="text" placeholder="Ej: Lima" autoComplete="off" {...register("city")} />
+                    </div>
+
+                    {selectedType === "EMPRESA" && (
+                      <div className="form-group form-group--full">
+                        <label htmlFor="cli-contact">Persona de contacto</label>
+                        <input id="cli-contact" type="text" placeholder="Ej: Área de Compras" autoComplete="off" {...register("contactName")} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── Sección 3: Otros Datos ── */}
+                <div className="form-section-card">
+                  <div className="section-title-row">
+                    <span className="section-num"><FileText size={13} /></span>
+                    <h3>Otros Datos</h3>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="cli-notes">Observaciones</label>
+                    <textarea
+                      id="cli-notes"
+                      rows={2}
+                      placeholder="Notas adicionales sobre el cliente..."
+                      autoComplete="off"
+                      {...register("notes")}
+                    />
+                    <span className="form-char-count">{notesValue.length}/500</span>
+                  </div>
+
+                  {mode === "edit" && (
+                    <div className="form-group">
+                      <label>Estado del cliente</label>
+                      <div className="status-toggle-wrapper">
+                        <label className="toggle-switch">
+                          <input
+                            type="checkbox"
+                            checked={statusValue === "ACTIVE"}
+                            onChange={(e) => setValue("status", e.target.checked ? "ACTIVE" : "INACTIVE")}
+                          />
+                          <span className="toggle-slider" />
+                        </label>
+                        <span className={`status-label ${statusValue === "ACTIVE" ? "status-label--active" : "status-label--inactive"}`}>
+                          {statusValue === "ACTIVE" ? "Activo" : "Inactivo"}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
               </div>
 
               {/* Acciones */}
@@ -319,7 +355,6 @@ export const ClientForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
                     : <><UserRound size={16} /> {mode === "create" ? "Registrar cliente" : "Guardar cambios"}</>}
                 </button>
               </div>
-
             </form>
           </motion.div>
         </motion.div>

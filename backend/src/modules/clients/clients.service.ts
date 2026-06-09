@@ -210,3 +210,126 @@ export const getClientsStats = async () => {
     particular: Number(particular.count),
   };
 };
+
+/* Consulta externa DNI / RUC (RENIEC / SUNAT) */
+export const lookupDocument = async (documentType: string, document: string) => {
+  const cleanDoc = document.trim();
+  
+  if (documentType === "DNI" && cleanDoc.length !== 8) {
+    throw new Error("El DNI debe tener exactamente 8 dígitos.");
+  }
+  if (documentType === "RUC" && cleanDoc.length !== 11) {
+    throw new Error("El RUC debe tener exactamente 11 dígitos.");
+  }
+
+  // 1. Intentar primero con graphperu (gratuito, rápido y sin token)
+  try {
+    console.log(`[RENIEC/SUNAT Lookup] Consultando en graphperu para ${documentType}: ${cleanDoc}`);
+    const res = await fetch(`https://graphperu.daustinn.com/api/query/${cleanDoc}`, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+      }
+    });
+
+    if (res.ok) {
+      const data = await res.json() as any;
+      if (data && (data.fullName || data.name)) {
+        const isRuc = documentType === "RUC";
+        if (isRuc) {
+          const cityParts = [data.district, data.province, data.region].filter(Boolean);
+          return {
+            success: true,
+            name: data.name,
+            address: data.address || "",
+            city: cityParts.join(" - ") || "",
+            documentType: "RUC",
+            document: cleanDoc,
+          };
+        } else {
+          return {
+            success: true,
+            name: data.fullName,
+            documentType: "DNI",
+            document: cleanDoc,
+          };
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error al consultar graphperu, intentando con APIsPERU...", err);
+  }
+
+  // 2. Fallback a APIsPERU si graphperu falla o no tiene resultados
+  const apiToken = process.env.RENIEC_SUNAT_API_TOKEN;
+  const apiBaseUrl = process.env.RENIEC_SUNAT_API_URL || "https://dniruc.apisperu.com";
+  
+  if (!apiToken) {
+    // Si no hay token de APIsPERU tampoco, lanzamos error
+    throw new Error("No se encontraron resultados para el documento ingresado.");
+  }
+
+  try {
+    const isRuc = documentType === "RUC";
+    const endpoint = isRuc 
+      ? `${apiBaseUrl}/api/v1/ruc/${cleanDoc}?token=${apiToken}`
+      : `${apiBaseUrl}/api/v1/dni/${cleanDoc}?token=${apiToken}`;
+      
+    const res = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      }
+    });
+
+    if (!res.ok) {
+      throw new Error(`Error en la consulta externa de APIsPERU (código: ${res.status})`);
+    }
+
+    const data = await res.json() as any;
+    console.log("[APIsPERU Response] data:", data);
+    
+    if (!data) {
+      throw new Error("No se recibió respuesta del servidor de consulta.");
+    }
+    
+    if (data.message) {
+      throw new Error(data.message);
+    }
+    
+    if (isRuc) {
+      if (!data.razonSocial) {
+        throw new Error("No se encontraron datos para el RUC ingresado.");
+      }
+      
+      const cityParts = [data.distrito, data.provincia, data.departamento].filter(Boolean);
+      return {
+        success: true,
+        name: data.razonSocial,
+        address: data.direccion || "",
+        city: cityParts.join(" - ") || "",
+        documentType: "RUC",
+        document: cleanDoc,
+      };
+    } else {
+      if (!data.nombres) {
+        throw new Error("No se encontraron datos para el DNI ingresado.");
+      }
+      
+      const fullName = [data.nombres, data.apellidoPaterno, data.apellidoMaterno]
+        .filter(Boolean)
+        .join(" ");
+        
+      return {
+        success: true,
+        name: fullName,
+        documentType: "DNI",
+        document: cleanDoc,
+      };
+    }
+  } catch (error: any) {
+    console.error("Error al consultar API externa APIsPERU:", error);
+    throw new Error(`La consulta de DNI/RUC falló: ${error.message || "Servicio no disponible"}`);
+  }
+};

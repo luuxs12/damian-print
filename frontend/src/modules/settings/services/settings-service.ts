@@ -11,6 +11,8 @@ export interface Settings {
   systemLogo:     string | null;
   yapeQr:         string | null;
   plinQr:         string | null;
+  smtpUser?:      string | null;
+  smtpPass?:      string | null;
   updatedAt:      string;
 }
 

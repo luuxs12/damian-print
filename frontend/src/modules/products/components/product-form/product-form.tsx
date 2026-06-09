@@ -502,59 +502,6 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                         <span className="form-error" role="alert">{errors.description.message}</span>
                       )}
                     </div>
-
-                    <div className="form-group">
-                      <label>Imagen del producto/servicio</label>
-                      {imagePreview ? (
-                        <div className="image-preview-container">
-                          <img src={imagePreview} alt="Preview" className="image-preview" />
-                          <div className="image-preview-actions">
-                            <span className="image-preview-name">Imagen seleccionada</span>
-                            <button
-                              type="button"
-                              className="img-btn img-btn--change"
-                              onClick={() => fileInputRef.current?.click()}
-                              disabled={uploading}
-                            >
-                              <ImagePlus size={14} />
-                              Cambiar
-                            </button>
-                            <button
-                              type="button"
-                              className="img-btn img-btn--remove"
-                              onClick={handleRemoveImage}
-                              disabled={uploading}
-                            >
-                              <Trash2 size={14} /> Quitar
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          className={`image-upload-zone ${uploading ? "image-upload-zone--loading" : ""}`}
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={uploading}
-                        >
-                          {uploading ? (
-                            <><Loader2 size={22} className="spin" /><span>Subiendo...</span></>
-                          ) : (
-                            <>
-                              <ImagePlus size={20} />
-                              <span>Subir Imagen</span>
-                              <small>PNG, JPG (Máx. 2MB)</small>
-                            </>
-                          )}
-                        </button>
-                      )}
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/png,image/jpeg,image/webp"
-                        onChange={handleFileChange}
-                        className="input-file-hidden"
-                      />
-                    </div>
                   </div>
 
                   {/* Columna Derecha */}
@@ -627,6 +574,60 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                         )}
                       </div>
                     </div>
+
+                    <div className="form-group">
+                      <label>Imagen del producto/servicio</label>
+                      {imagePreview ? (
+                        <div className="image-preview-container">
+                          <img src={imagePreview} alt="Preview" className="image-preview" />
+                          <div className="image-preview-actions">
+                            <span className="image-preview-name">Imagen seleccionada</span>
+                            <button
+                              type="button"
+                              className="img-btn img-btn--change"
+                              onClick={() => fileInputRef.current?.click()}
+                              disabled={uploading}
+                            >
+                              <ImagePlus size={14} />
+                              Cambiar
+                            </button>
+                            <button
+                              type="button"
+                              className="img-btn img-btn--remove"
+                              onClick={handleRemoveImage}
+                              disabled={uploading}
+                            >
+                              <Trash2 size={14} /> Quitar
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className={`image-upload-zone ${uploading ? "image-upload-zone--loading" : ""}`}
+                          onClick={() => fileInputRef.current?.click()}
+                          disabled={uploading}
+                        >
+                          {uploading ? (
+                            <><Loader2 size={22} className="spin" /><span>Subiendo...</span></>
+                          ) : (
+                            <>
+                              <ImagePlus size={20} />
+                              <span>Subir Imagen</span>
+                              <small>PNG, JPG (Máx. 2MB)</small>
+                            </>
+                          )}
+                        </button>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={handleFileChange}
+                        className="input-file-hidden"
+                      />
+                    </div>
+
                   </div>
 
                 </div>

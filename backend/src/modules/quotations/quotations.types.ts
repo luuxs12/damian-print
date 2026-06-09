@@ -20,6 +20,7 @@ export interface CreateQuotationDTO {
 }
 
 export interface UpdateQuotationDTO {
+  clientId?:       number | null;
   clientName?:     string;
   clientDocument?: string;
   clientPhone?:    string;

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Boxes, Loader2 } from "lucide-react";
+import { X, Boxes, Loader2, Package, DollarSign } from "lucide-react";
 import { useForm }          from "react-hook-form";
 import { z }                from "zod";
 import { zodResolver }      from "@hookform/resolvers/zod";
@@ -12,7 +12,6 @@ import type { Supply }     from "../../types/supply.types";
 
 import "./supply-form.scss";
 
-/* ── Validación con mensajes claros ── */
 const schema = z.object({
   code: z
     .string()
@@ -20,7 +19,7 @@ const schema = z.object({
     .max(20, "El código no puede superar los 20 caracteres.")
     .refine((v) => v.trim().length > 0, "El código no puede ser vacío.")
     .refine((v) => /^[A-Za-z0-9-]+$/.test(v.trim()), "El código solo debe contener letras, números y guiones."),
-  
+
   name: z
     .string()
     .min(1, "El nombre es obligatorio.")
@@ -33,8 +32,7 @@ const schema = z.object({
     .max(300, "La descripción no puede superar los 300 caracteres.")
     .optional(),
 
-  stock: z.coerce.number().min(0, "El stock no puede ser negativo."),
-
+  stock:    z.coerce.number().min(0, "El stock no puede ser negativo."),
   minStock: z.coerce.number().min(0, "El stock mínimo no puede ser negativo."),
 
   unit: z
@@ -95,22 +93,16 @@ export const SupplyForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
       } else if (initialData) {
         await suppliesService.updateSupply(initialData.id, data);
       }
-
       toast.success(
-        mode === "create"
-          ? "Insumo creado correctamente"
-          : "Insumo actualizado correctamente"
+        mode === "create" ? "Insumo creado correctamente" : "Insumo actualizado correctamente"
       );
-
       onSuccess();
       onClose();
-
     } catch (error: unknown) {
       const axiosErr = error as { response?: { data?: { message?: string } } };
       const msg: string =
         axiosErr.response?.data?.message ||
         (error instanceof Error ? error.message : "Ocurrió un error inesperado.");
-
       if (msg.toLowerCase().includes("código") || msg.toLowerCase().includes("code")) {
         setError("code", { message: msg });
       } else if (msg.toLowerCase().includes("nombre")) {
@@ -146,13 +138,11 @@ export const SupplyForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
             transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
             onClick={(e) => e.stopPropagation()}
           >
-
             {/* Cabecera */}
             <div className="supply-form-header">
               <div className="supply-form-header__icon">
                 <Boxes size={20} />
               </div>
-
               <div>
                 <h2>{mode === "create" ? "Nuevo insumo" : "Editar insumo"}</h2>
                 <p>
@@ -161,7 +151,6 @@ export const SupplyForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
                     : "Modifica los datos del insumo seleccionado."}
                 </p>
               </div>
-
               <button className="supply-form-close" onClick={onClose} type="button">
                 <X size={18} />
               </button>
@@ -169,138 +158,183 @@ export const SupplyForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
 
             {/* Formulario */}
             <form className="supply-form" onSubmit={handleSubmit(handlePreSubmit)} noValidate>
-
               <div className="supply-form-scroll-area">
-                <div className="form-row-two">
-                  {/* Código */}
-                  <div className="form-group">
-                    <label htmlFor="sup-code">
-                      Código <span className="form-required">*</span>
-                    </label>
-                    <input
-                      id="sup-code"
-                      type="text"
-                      placeholder="Ej: INS-101"
-                      disabled={mode === "edit"}
-                      autoFocus={mode === "create"}
-                      autoComplete="off"
-                      {...register("code")}
-                    />
-                    {errors.code && (
-                      <span className="form-error" role="alert">{errors.code.message}</span>
-                    )}
+
+                {/* ── Sección 1: Identificación ── */}
+                <div className="form-section-card">
+                  <div className="section-title-row">
+                    <span className="section-num"><Package size={13} /></span>
+                    <h3>Identificación del Insumo</h3>
                   </div>
 
-                  {/* Unidad de medida */}
-                  <div className="form-group">
-                    <label htmlFor="sup-unit">
-                      Unidad de Medida <span className="form-required">*</span>
-                    </label>
-                    <select id="sup-unit" {...register("unit")}>
-                      <option value="und">Unidad (und)</option>
-                      <option value="m²">Metro cuadrado (m²)</option>
-                      <option value="m">Metro lineal (m)</option>
-                      <option value="rollo">Rollo</option>
-                      <option value="resma">Resma</option>
-                      <option value="l">Litro (l)</option>
-                      <option value="kg">Kilogramo (kg)</option>
-                      <option value="caja">Caja</option>
-                      <option value="paquete">Paquete</option>
-                    </select>
-                    {errors.unit && (
-                      <span className="form-error" role="alert">{errors.unit.message}</span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Nombre */}
-                <div className="form-group">
-                  <label htmlFor="sup-name">
-                    Nombre del Insumo <span className="form-required">*</span>
-                  </label>
-                  <input
-                    id="sup-name"
-                    type="text"
-                    placeholder="Ej: Vinil Autoadhesivo Brillante"
-                    autoComplete="off"
-                    autoFocus={mode === "edit"}
-                    {...register("name")}
-                  />
-                  {errors.name && (
-                    <span className="form-error" role="alert">{errors.name.message}</span>
-                  )}
-                </div>
-
-                {/* Descripción */}
-                <div className="form-group">
-                  <label htmlFor="sup-desc">Descripción</label>
-                  <textarea
-                    id="sup-desc"
-                    placeholder="Especificaciones o notas sobre el insumo (opcional)..."
-                    rows={2}
-                    autoComplete="off"
-                    {...register("description")}
-                  />
-                  {errors.description && (
-                    <span className="form-error" role="alert">{errors.description.message}</span>
-                  )}
-                </div>
-
-                {/* Costo Unitario */}
-                <div className="form-group">
-                  <label htmlFor="sup-cost">
-                    Costo Unitario (S/.) <span className="form-required">*</span>
-                  </label>
-                  <input
-                    id="sup-cost"
-                    type="number"
-                    step="any"
-                    placeholder="0.00"
-                    {...register("cost")}
-                  />
-                  {errors.cost && (
-                    <span className="form-error" role="alert">{errors.cost.message}</span>
-                  )}
-                </div>
-
-                {/* Estado (solo visible en modo edición) */}
-                {mode === "edit" && (
-                  <div className="form-group">
-                    <label htmlFor="sup-status">Estado</label>
-                    <div className="status-toggle-wrapper">
-                      <label className="toggle-switch">
-                        <input
-                          id="sup-status"
-                          type="checkbox"
-                          checked={statusValue === "ACTIVE"}
-                          onChange={(e) =>
-                            setValue("status", e.target.checked ? "ACTIVE" : "INACTIVE")
-                          }
-                        />
-                        <span className="toggle-slider" />
+                  <div className="form-grid">
+                    {/* Código */}
+                    <div className="form-group">
+                      <label htmlFor="sup-code">
+                        Código <span className="form-required">*</span>
                       </label>
-                      <span className={`status-label ${statusValue === "ACTIVE" ? "status-label--active" : "status-label--inactive"}`}>
-                        {statusValue === "ACTIVE" ? "Activo" : "Inactivo"}
-                      </span>
+                      <input
+                        id="sup-code"
+                        type="text"
+                        placeholder="Ej: INS-101"
+                        disabled={mode === "edit"}
+                        autoFocus={mode === "create"}
+                        autoComplete="off"
+                        {...register("code")}
+                      />
+                      {errors.code && (
+                        <span className="form-error" role="alert">{errors.code.message}</span>
+                      )}
                     </div>
-                    {errors.status && (
-                      <span className="form-error" role="alert">{errors.status.message}</span>
+
+                    {/* Unidad de medida */}
+                    <div className="form-group">
+                      <label htmlFor="sup-unit">
+                        Unidad de Medida <span className="form-required">*</span>
+                      </label>
+                      <select id="sup-unit" {...register("unit")}>
+                        <option value="und">Unidad (und)</option>
+                        <option value="m²">Metro cuadrado (m²)</option>
+                        <option value="m">Metro lineal (m)</option>
+                        <option value="rollo">Rollo</option>
+                        <option value="resma">Resma</option>
+                        <option value="l">Litro (l)</option>
+                        <option value="kg">Kilogramo (kg)</option>
+                        <option value="caja">Caja</option>
+                        <option value="paquete">Paquete</option>
+                      </select>
+                      {errors.unit && (
+                        <span className="form-error" role="alert">{errors.unit.message}</span>
+                      )}
+                    </div>
+
+                    {/* Nombre */}
+                    <div className="form-group form-group--full">
+                      <label htmlFor="sup-name">
+                        Nombre del Insumo <span className="form-required">*</span>
+                      </label>
+                      <input
+                        id="sup-name"
+                        type="text"
+                        placeholder="Ej: Vinil Autoadhesivo Brillante"
+                        autoComplete="off"
+                        autoFocus={mode === "edit"}
+                        {...register("name")}
+                      />
+                      {errors.name && (
+                        <span className="form-error" role="alert">{errors.name.message}</span>
+                      )}
+                    </div>
+
+                    {/* Descripción */}
+                    <div className="form-group form-group--full">
+                      <label htmlFor="sup-desc">Descripción</label>
+                      <textarea
+                        id="sup-desc"
+                        placeholder="Especificaciones o notas sobre el insumo (opcional)..."
+                        rows={2}
+                        autoComplete="off"
+                        {...register("description")}
+                      />
+                      {errors.description && (
+                        <span className="form-error" role="alert">{errors.description.message}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Sección 2: Inventario y Costos ── */}
+                <div className="form-section-card">
+                  <div className="section-title-row">
+                    <span className="section-num"><DollarSign size={13} /></span>
+                    <h3>Inventario y Costos</h3>
+                  </div>
+
+                  <div className="form-grid">
+                    {/* Stock */}
+                    <div className="form-group">
+                      <label htmlFor="sup-stock">Stock actual</label>
+                      <input
+                        id="sup-stock"
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="0"
+                        {...register("stock")}
+                      />
+                      {errors.stock && (
+                        <span className="form-error" role="alert">{errors.stock.message}</span>
+                      )}
+                    </div>
+
+                    {/* Stock mínimo */}
+                    <div className="form-group">
+                      <label htmlFor="sup-minstock">Stock mínimo</label>
+                      <input
+                        id="sup-minstock"
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="0"
+                        {...register("minStock")}
+                      />
+                      {errors.minStock && (
+                        <span className="form-error" role="alert">{errors.minStock.message}</span>
+                      )}
+                    </div>
+
+                    {/* Costo Unitario */}
+                    <div className="form-group">
+                      <label htmlFor="sup-cost">
+                        Costo Unitario (S/.) <span className="form-required">*</span>
+                      </label>
+                      <input
+                        id="sup-cost"
+                        type="number"
+                        step="any"
+                        placeholder="0.00"
+                        {...register("cost")}
+                      />
+                      {errors.cost && (
+                        <span className="form-error" role="alert">{errors.cost.message}</span>
+                      )}
+                    </div>
+
+                    {/* Estado */}
+                    {mode === "edit" && (
+                      <div className="form-group">
+                        <label htmlFor="sup-status">Estado</label>
+                        <div className="status-toggle-wrapper" style={{ marginTop: "8px" }}>
+                          <label className="toggle-switch">
+                            <input
+                              id="sup-status"
+                              type="checkbox"
+                              checked={statusValue === "ACTIVE"}
+                              onChange={(e) =>
+                                setValue("status", e.target.checked ? "ACTIVE" : "INACTIVE")
+                              }
+                            />
+                            <span className="toggle-slider" />
+                          </label>
+                          <span className={`status-label ${statusValue === "ACTIVE" ? "status-label--active" : "status-label--inactive"}`}>
+                            {statusValue === "ACTIVE" ? "Activo" : "Inactivo"}
+                          </span>
+                        </div>
+                        {errors.status && (
+                          <span className="form-error" role="alert">{errors.status.message}</span>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
+                </div>
+
               </div>
 
               {/* Acciones */}
               <div className="supply-form-actions">
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={onClose}
-                  disabled={isSubmitting}
-                >
+                <button type="button" className="btn-cancel" onClick={onClose} disabled={isSubmitting}>
                   Cancelar
                 </button>
-
                 <button type="submit" className="btn-save" disabled={isSubmitting}>
                   {isSubmitting
                     ? <><Loader2 size={16} className="spin" /> Guardando...</>
@@ -308,9 +342,7 @@ export const SupplyForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
                   }
                 </button>
               </div>
-
             </form>
-
           </motion.div>
         </motion.div>
       </AnimatePresence>
