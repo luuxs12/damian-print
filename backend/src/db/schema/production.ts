@@ -11,7 +11,7 @@ export const productionOrders = pgTable(
     productName:  text("product_name").notNull(),
     clientName:   text("client_name").notNull(),
     quantity:     integer("quantity").notNull().default(1),
-    branchName:   text("branch_name").notNull().default("Taller Principal"),
+    branchName:   text("branch_name").notNull().default("Local Principal"),
     status:       text("status").notNull().default("PENDING"), // PENDING | DESIGN | PRINTING | FINISHING | READY | DELIVERED
     promisedDate: timestamp("promised_date").notNull(),
     notes:        text("notes"),

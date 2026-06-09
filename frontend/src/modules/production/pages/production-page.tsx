@@ -1,7 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect, useCallback } from "react";
 import { 
-  Factory, 
   Calendar as CalendarIcon, 
   LayoutGrid, 
 
@@ -29,7 +28,7 @@ export const ProductionPage: React.FC = () => {
   const [newClient, setNewClient] = useState("");
   const [newProduct, setNewProduct] = useState("");
   const [newQuantity, setNewQuantity] = useState(1);
-  const [newBranch, setNewBranch] = useState("Taller Principal");
+  const [newBranch, setNewBranch] = useState("Local Principal");
   const [newPromisedDate, setNewPromisedDate] = useState("");
   const [newNotes, setNewNotes] = useState("");
 
@@ -113,7 +112,7 @@ export const ProductionPage: React.FC = () => {
       setNewClient("");
       setNewProduct("");
       setNewQuantity(1);
-      setNewBranch("Taller Principal");
+      setNewBranch("Local Principal");
       setNewPromisedDate("");
       setNewNotes("");
     } catch {
@@ -135,7 +134,6 @@ export const ProductionPage: React.FC = () => {
       {/* Page Header */}
       <div className="production-page-header">
         <div className="header-title">
-          <Factory size={28} className="title-icon" />
           <div>
             <h1>Producción y Órdenes</h1>
             <p>Monitoreo de órdenes de producción y calendario de entregas.</p>

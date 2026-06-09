@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Coins,
   ClipboardList,
@@ -10,6 +10,7 @@ import {
   XCircle,
   TrendingUp,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -25,6 +26,7 @@ import {
 
 import { KpiCard } from "../components/kpi-cards/kpi-card";
 import { useAuthStore } from "@/modules/auth/store/auth-store";
+import { dashboardService, type DashboardStats } from "../services/dashboard-service";
 import "./dashboard-page.scss";
 
 /* ────────────────────────────────────────────────────────────
@@ -62,7 +64,7 @@ const BASE_WEEK: Record<string, { ingresos: number; pedidos: number }> = {
   "Dom": { ingresos: 3600, pedidos: 24 },
 };
 
-const DAY_LABELS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+
 
 /* ────────────────────────────────────────────────────────────
    Helpers
@@ -80,26 +82,7 @@ function formatShort(d: Date) {
   return `${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`;
 }
 
-function buildChartData(start: Date, end: Date): ChartPoint[] {
-  const points: ChartPoint[] = [];
-  const cursor = new Date(start);
-  cursor.setHours(0, 0, 0, 0);
-  const endNorm = new Date(end);
-  endNorm.setHours(0, 0, 0, 0);
 
-  while (cursor <= endNorm) {
-    const label = DAY_LABELS[cursor.getDay()];
-    const base = BASE_WEEK[label] ?? { ingresos: 1000, pedidos: 7 };
-    const mod = ((cursor.getDate() * 7 + cursor.getMonth() * 3) % 40) / 100 + 0.85;
-    points.push({
-      label: `${cursor.getDate()}/${cursor.getMonth() + 1}`,
-      ingresos: Math.round(base.ingresos * mod),
-      pedidos: Math.round(base.pedidos * mod),
-    });
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return points;
-}
 
 /* ────────────────────────────────────────────────────────────
    Tooltip personalizado
@@ -291,6 +274,28 @@ export function DashboardPage() {
 
   const [activeTab, setActiveTab] = useState<"metrics" | "calendar">("metrics");
   const [selectedPreset, setSelectedPreset] = useState<"week" | "15" | "30">("week");
+  const [data, setData] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchStats = useCallback(async () => {
+    setLoading(true);
+    try {
+      const startStr = dateRange.startDate ? dateRange.startDate.toISOString() : undefined;
+      const endStr = dateRange.endDate ? dateRange.endDate.toISOString() : undefined;
+      const stats = await dashboardService.getStats(startStr, endStr);
+      setData(stats);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [dateRange]);
+
+  useEffect(() => {
+    if (hasAccess) {
+      fetchStats();
+    }
+  }, [fetchStats, hasAccess]);
 
   const setRangePreset = (days: number, preset: "15" | "30") => {
     const end = new Date();
@@ -306,38 +311,17 @@ export function DashboardPage() {
   };
 
   const { kpis, chartData, breakdown } = useMemo(() => {
-    const start = dateRange.startDate;
-    const end   = dateRange.endDate;
-
-    if (!start || !end) {
-      const demo: ChartPoint[] = Object.entries(BASE_WEEK).map(([label, v]) => ({
-        label,
-        ingresos: v.ingresos,
-        pedidos: v.pedidos,
-      }));
-      const totalIngresos = demo.reduce((s, d) => s + d.ingresos, 0);
-      const totalPedidos  = demo.reduce((s, d) => s + d.pedidos, 0);
-      return {
-        kpis: {
-          ingresos:   totalIngresos,
-          pedidos:    totalPedidos,
-          entregas:   Math.round(totalPedidos * 0.75),
-          enEspera:   Math.round(totalPedidos * 0.18),
-        },
-        chartData: demo,
-        breakdown: {
-          completados: Math.round(totalPedidos * 0.75),
-          cancelados:  Math.round(totalPedidos * 0.05),
-          clientes:    24,
-          productos:   Math.round(totalPedidos * 1.4),
-        },
-      };
+    if (data) {
+      return data;
     }
 
-    const points = buildChartData(start, end);
-    const totalIngresos = points.reduce((s, p) => s + p.ingresos, 0);
-    const totalPedidos  = points.reduce((s, p) => s + p.pedidos, 0);
-
+    const demo: ChartPoint[] = Object.entries(BASE_WEEK).map(([label, v]) => ({
+      label,
+      ingresos: v.ingresos,
+      pedidos: v.pedidos,
+    }));
+    const totalIngresos = demo.reduce((s, d) => s + d.ingresos, 0);
+    const totalPedidos  = demo.reduce((s, d) => s + d.pedidos, 0);
     return {
       kpis: {
         ingresos:   totalIngresos,
@@ -345,15 +329,15 @@ export function DashboardPage() {
         entregas:   Math.round(totalPedidos * 0.75),
         enEspera:   Math.round(totalPedidos * 0.18),
       },
-      chartData: points,
+      chartData: demo,
       breakdown: {
         completados: Math.round(totalPedidos * 0.75),
         cancelados:  Math.round(totalPedidos * 0.05),
-        clientes:    Math.round(totalPedidos * 0.35),
+        clientes:    24,
         productos:   Math.round(totalPedidos * 1.4),
       },
     };
-  }, [dateRange]);
+  }, [data]);
 
   if (!hasAccess) {
     return (
@@ -406,7 +390,10 @@ export function DashboardPage() {
 
           <div className="card-header">
             <div>
-              <h3>Ingresos y Pedidos</h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <h3>Ingresos y Pedidos</h3>
+                {loading && <Loader2 className="spin" size={14} style={{ color: "var(--primary-color)" }} />}
+              </div>
               <p className="chart-subtitle">{periodLabel}</p>
             </div>
             

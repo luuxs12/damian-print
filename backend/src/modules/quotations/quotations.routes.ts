@@ -78,4 +78,14 @@ export async function quotationsRoutes(app: FastifyInstance) {
       catch (error) { return handleError(error, reply); }
     }
   );
+
+  /* POST /quotations/:id/send-email */
+  app.post(
+    "/:id/send-email",
+    { preHandler: requirePermission("Cotizaciones") },
+    async (request, reply) => {
+      try { await quotationsController.sendEmail(request, reply); }
+      catch (error) { return handleError(error, reply); }
+    }
+  );
 }

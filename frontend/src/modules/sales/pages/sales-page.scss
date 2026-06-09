@@ -1,0 +1,567 @@
+@use "@/shared/styles/themes/liquid-glass" as glass;
+
+/* ── Sales Page Wrapper ── */
+.sales-page {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Header ── */
+.sales-page__header {
+  @include glass.liquid-glass;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  p {
+    margin-top: 6px;
+    color: var(--text-secondary);
+  }
+}
+
+.sales-page__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Reload Button ── */
+.sales-page__reload-btn {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--glass-active);
+    color: var(--text-primary);
+    transform: translateY(-2px);
+  }
+
+  svg.spin {
+    animation: s-spin 1s linear infinite;
+  }
+}
+
+/* ── Create Button ── */
+.sales-page__create-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  padding: 14px 22px;
+  border-radius: 18px;
+  cursor: pointer;
+  font-weight: 700;
+  color: white;
+  background: var(--primary-gradient);
+  box-shadow: 0 4px 12px var(--primary-shadow);
+  transition: 0.25s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+[data-theme="light"] .sales-page__header {
+  background: linear-gradient(135deg, rgba(255,255,255,0.88), rgba(255,255,255,0.72));
+  border: 1px solid rgba(15,23,42,0.06);
+  box-shadow: none;
+}
+
+/* ── KPIs ── */
+.sales-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.s-kpi {
+  @include glass.liquid-glass;
+  padding: 20px;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  transition: transform var(--transition-normal);
+
+  &:hover { transform: translateY(-2px); }
+
+  &__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+
+    span {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1;
+    }
+
+    h3 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin: 8px 0 0 0;
+      line-height: 1;
+    }
+  }
+}
+
+.s-kpi--indigo .s-kpi__icon { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+.s-kpi--orange .s-kpi__icon { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.s-kpi--green  .s-kpi__icon { background: linear-gradient(135deg, #10b981, #059669); }
+.s-kpi--red    .s-kpi__icon { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.s-kpi--teal   .s-kpi__icon { background: linear-gradient(135deg, #14b8a6, #0d9488);
+  + .s-kpi__info h3 { font-size: 1.25rem; } }
+
+[data-theme="light"] .s-kpi {
+  background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.78));
+  border-color: rgba(15,23,42,0.08);
+}
+
+/* ── Sales Card Container ── */
+.sales-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  @include glass.liquid-glass;
+  padding: 28px;
+  border-radius: 28px;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+[data-theme="light"] .sales-card {
+  background: linear-gradient(135deg, rgba(255,255,255,0.90), rgba(255,255,255,0.76));
+  border-color: rgba(15,23,42,0.08);
+  box-shadow: 0 8px 24px rgba(15,23,42,0.07);
+
+  .sales-card__top input,
+  .sales-card__top select {
+    background: rgba(255,255,255,0.85);
+    border: 1px solid rgba(15,23,42,0.08);
+  }
+}
+
+/* ── Filters Bar ── */
+.sales-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.sales-card__filters {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.sales-card__search-wrapper {
+  position: relative;
+  min-width: 280px;
+  flex: 1;
+  max-width: 400px;
+
+  input {
+    width: 100%;
+    padding: 12px 16px 12px 42px;
+    border-radius: 14px;
+    border: 1px solid var(--glass-border);
+    background: var(--glass-surface-input);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.25s ease;
+
+    &:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+      outline: none;
+    }
+  }
+
+  svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    pointer-events: none;
+  }
+}
+
+.sales-card__select-filter {
+  padding: 12px 32px 12px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-surface-input);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  outline: none;
+  cursor: pointer;
+  min-width: 160px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 16px;
+  transition: all 0.25s ease;
+
+  &:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+}
+
+/* ── Table Area ── */
+.sales-card__table-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.01);
+  margin-top: 10px;
+
+  /* Custom scrollbar */
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
+}
+
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  th {
+    padding: 16px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  td {
+    padding: 16px;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--glass-border);
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+  }
+}
+
+/* ── Badges ── */
+.s-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.s-status-badge--pendiente {
+  background: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.s-status-badge--pagada {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.s-status-badge--anulada {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.s-billing-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: rgba(99, 102, 241, 0.12);
+  color: #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.s-billing-badge--boleta {
+  background: rgba(20, 184, 166, 0.12);
+  color: #14b8a6;
+  border: 1px solid rgba(20, 184, 166, 0.2);
+}
+
+.s-billing-badge--factura {
+  background: rgba(139, 92, 246, 0.12);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* ── Actions Row ── */
+.sales-actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.s-action-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--text-primary);
+    transform: translateY(-1px);
+  }
+}
+
+.s-action-btn--view:hover {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.3);
+  color: #6366f1;
+}
+
+.s-action-btn--edit:hover {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.s-action-btn--delete:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+/* ── Sharing & Print Controls ── */
+.share-action-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+}
+
+.btn-share {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+}
+
+.btn-share--whatsapp {
+  background: #25d366;
+  box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);
+  &:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(37, 211, 102, 0.3); }
+}
+
+.btn-share--email {
+  background: #3b82f6;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+  &:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(59, 130, 246, 0.3); }
+}
+
+.btn-share--print {
+  background: #64748b;
+  box-shadow: 0 4px 10px rgba(100, 116, 139, 0.2);
+  &:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(100, 116, 139, 0.3); }
+}
+
+/* ── Convert Section ── */
+.convert-invoice-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(99, 102, 241, 0.03);
+  border: 1px dashed rgba(99, 102, 241, 0.3);
+  margin-top: 14px;
+}
+
+.convert-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn-convert {
+  flex: 1;
+  min-width: 130px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 0.8rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-convert--boleta {
+  background: rgba(20, 184, 166, 0.1);
+  color: #14b8a6;
+  border-color: rgba(20, 184, 166, 0.25);
+  &:hover { background: rgba(20, 184, 166, 0.2); }
+}
+
+.btn-convert--factura {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+  border-color: rgba(139, 92, 246, 0.25);
+  &:hover { background: rgba(139, 92, 246, 0.2); }
+}
+
+/* ── Print Media query ── */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-document-container, .print-document-container * {
+    visibility: visible;
+  }
+  .print-document-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}
+
+@keyframes s-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── Laptop (ancho) ── */
+@media (max-width: 1400px) {
+  .sales-page__header {
+    padding: 20px 24px;
+    border-radius: 22px;
+
+    h1 { font-size: 1.7rem; }
+  }
+  .sales-page__create-btn {
+    padding: 12px 18px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ── Compresión vertical para laptops (ej. 1366x768) ── */
+@media (max-height: 850px) and (min-width: 769px) {
+  .sales-page {
+    gap: 14px;
+  }
+
+  .sales-page__header {
+    padding: 16px 22px;
+    border-radius: 20px;
+
+    h1 { font-size: 1.5rem; }
+    p  { margin-top: 2px; font-size: 0.85rem; }
+  }
+  .sales-page__create-btn {
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    border-radius: 14px;
+  }
+}

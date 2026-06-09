@@ -64,8 +64,7 @@ export const ProductDetail = ({ product, onClose, onEdit, onDuplicateSuccess }: 
 
   const totalMaterialsCost = materials.reduce((acc: number, m: ProductMaterial) => acc + (Number(m.qty ?? 0) * Number(m.cost ?? 0)), 0);
   const laborCost = Number(product.laborCost ?? 0);
-  const overheadCost = Number(product.overheadCost ?? 0);
-  const estimatedCost = totalMaterialsCost + laborCost + overheadCost;
+  const estimatedCost = totalMaterialsCost + laborCost;
   const basePrice = Number(product.pricePublic);
   const estimatedProfit = Math.max(0, basePrice - estimatedCost);
   const profitMargin = basePrice > 0 ? (estimatedProfit / basePrice) * 100 : 0;
@@ -203,16 +202,12 @@ export const ProductDetail = ({ product, onClose, onEdit, onDuplicateSuccess }: 
                     <span className="spec-val">S/ {Number(product.priceReseller).toFixed(2)}</span>
                   </div>
                   <div className="spec-card">
-                    <span className="spec-title">Control de Inventario</span>
-                    <span className="spec-val">{product.manageInventory ? "Sí (Stock)" : "No (Servicio)"}</span>
+                    <span className="spec-title">Días de Elaboración</span>
+                    <span className="spec-val">{product.overheadCost ? `${product.overheadCost} días` : "Inmediato"}</span>
                   </div>
                   <div className="spec-card">
-                    <span className="spec-title">Flujo de Trabajo</span>
-                    <span className="spec-val">{product.sendToProduction ? "Enviar a Taller" : "Entrega Directa"}</span>
-                  </div>
-                  <div className="spec-card">
-                    <span className="spec-title">Contar Impresiones</span>
-                    <span className="spec-val">{product.countAsPrint ? "Sí" : "No"}</span>
+                    <span className="spec-title">Orden de Producción</span>
+                    <span className="spec-val">{product.sendToProduction ? "Habilitado" : "No aplica"}</span>
                   </div>
                 </div>
               </div>
@@ -267,10 +262,6 @@ export const ProductDetail = ({ product, onClose, onEdit, onDuplicateSuccess }: 
                         <span>Mano de obra</span>
                         <span>S/ {laborCost.toFixed(2)}</span>
                       </div>
-                      <div className="summary-row">
-                        <span>Costos indirectos</span>
-                        <span>S/ {overheadCost.toFixed(2)}</span>
-                      </div>
                       <div className="divider-line" />
                       <div className="summary-row highlight">
                         <span>Costo estimado</span>
@@ -288,7 +279,7 @@ export const ProductDetail = ({ product, onClose, onEdit, onDuplicateSuccess }: 
                       <div className="summary-row highlight-green">
                         <span>Margen neto</span>
                         <strong>{profitMargin.toFixed(1)}%</strong>
-                      </div>
+</div>
                     </div>
                   </div>
                 </div>
@@ -300,25 +291,17 @@ export const ProductDetail = ({ product, onClose, onEdit, onDuplicateSuccess }: 
               <div className="tab-pane-finishes">
                 <h4 className="pane-title"><Sparkles size={15} /> Acabados de Post-Prensa</h4>
                 <div className="finishes-list">
-                  {isService ? (
-                    <>
-                      <div className="finish-tag-card">
-                        <span className="finish-name">Laminado Mate</span>
-                        <p>Película protectora mate antirreflejos.</p>
+                  {product.branchName && product.branchName.trim() ? (
+                    product.branchName.split(",").map((finishName, idx) => (
+                      <div key={idx} className="finish-tag-card">
+                        <span className="finish-name">{finishName.trim()}</span>
+                        <p>Acabado especial de post-prensa requerido para la entrega.</p>
                       </div>
-                      <div className="finish-tag-card">
-                        <span className="finish-name">Refilado Guillotina</span>
-                        <p>Corte exacto a escuadra del pliego.</p>
-                      </div>
-                      <div className="finish-tag-card">
-                        <span className="finish-name">Empacado Termoencogible</span>
-                        <p>Sellado plástico protector contra humedad.</p>
-                      </div>
-                    </>
+                    ))
                   ) : (
                     <div className="no-items-placeholder">
                       <HelpCircle size={28} />
-                      <p>No aplica para productos de inventario.</p>
+                      <p>No se especificaron acabados para este producto/servicio.</p>
                     </div>
                   )}
                 </div>

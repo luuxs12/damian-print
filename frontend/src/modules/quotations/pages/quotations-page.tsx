@@ -12,12 +12,14 @@ import {
   Clock,
   DollarSign,
   X,
-  User,
-  Percent,
   PackagePlus,
   Loader2,
+  Printer,
+  Send,
+  ShoppingCart,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import {
   quotationsService,
   type Quotation,
@@ -92,6 +94,7 @@ const emptyForm = () => ({
    MAIN PAGE
 ══════════════════════════════════════════════════════════ */
 export const QuotationsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [quotations, setQuotations] = useState<Quotation[]>([]);
   const [stats, setStats] = useState<QuotationStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -210,26 +213,28 @@ export const QuotationsPage: React.FC = () => {
       return;
     }
 
-    // 1. Search locally
-    const found = clients.find((c) => c.document === doc);
-    if (found) {
-      setForm((p) => ({
-        ...p,
-        clientId: found.id,
-        clientName: found.name,
-        clientDocument: doc,
-        clientPhone: found.phone || "",
-        clientEmail: found.email || "",
-        clientAddress: found.address || "",
-      }));
-      toast.success(`Cliente registrado "${found.name}" cargado localmente.`);
-      return;
-    }
-
-    // 2. RENIEC/SUNAT API lookup
-    const docType = doc.length === 11 ? "RUC" : "DNI";
     setIsSearchingDoc(true);
     try {
+      // 1. Search in the backend database first
+      const dbClients = await clientsService.searchClients(doc);
+      const found = dbClients.find((c) => c.document === doc);
+      if (found) {
+        setForm((p) => ({
+          ...p,
+          clientId: found.id,
+          clientName: found.name,
+          clientDocument: doc,
+          clientPhone: found.phone || "",
+          clientEmail: found.email || "",
+          clientAddress: found.address || "",
+        }));
+        toast.success(`Cliente registrado "${found.name}" encontrado en la base de datos.`);
+        setIsSearchingDoc(false);
+        return;
+      }
+
+      // 2. RENIEC/SUNAT API lookup
+      const docType = doc.length === 11 ? "RUC" : "DNI";
       const result = await clientsService.lookupDocument(docType, doc);
       if (result && result.name) {
         setForm((p) => ({
@@ -382,6 +387,127 @@ export const QuotationsPage: React.FC = () => {
       const msg = (err as { message?: string }).message || "Error al eliminar.";
       toast.error(msg);
     }
+  };
+
+  /* ── email/whatsapp/print helpers ── */
+  const handleSendEmail = async (id: number) => {
+    const loader = toast.loading("Enviando correo de cotización...");
+    try {
+      const res = await quotationsService.sendEmail(id);
+      if (res.sent) {
+        toast.success("Correo enviado con éxito.", { id: loader });
+      } else {
+        toast.error("No se pudo enviar. SMTP no configurado.", { id: loader });
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Error al enviar correo.", { id: loader });
+    }
+  };
+
+  const handleSendWhatsApp = (q: Quotation) => {
+    if (!q.clientPhone) {
+      toast.error("El cliente no tiene teléfono registrado.");
+      return;
+    }
+    const cleanPhone = q.clientPhone.replace(/\D/g, "");
+    const itemsText = q.items?.map((i) => `- ${i.quantity}x ${i.description} (${fmt(i.totalPrice)})`).join("%0A") || "";
+    const text = `Hola *${q.clientName}*, adjuntamos el detalle de su Cotización *${q.quotationNumber}*:%0A%0A${itemsText}%0A%0A*Total:* ${fmt(q.total)}%0A*Válido hasta:* ${new Date(q.validUntil).toLocaleDateString("es-PE")}%0A%0A_Industria Gráfica Damian_`;
+    window.open(`https://api.whatsapp.com/send?phone=51${cleanPhone}&text=${text}`, "_blank");
+  };
+
+  const handlePrint = (q: Quotation) => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("El navegador bloqueó la ventana emergente de impresión.");
+      return;
+    }
+
+    const itemsRows = q.items?.map(i => `
+      <tr>
+        <td style="padding: 6px; border-bottom: 1px solid #ddd;">${i.description}</td>
+        <td style="padding: 6px; border-bottom: 1px solid #ddd; text-align: center;">${i.quantity}</td>
+        <td style="padding: 6px; border-bottom: 1px solid #ddd; text-align: right;">S/ ${i.unitPrice.toFixed(2)}</td>
+        <td style="padding: 6px; border-bottom: 1px solid #ddd; text-align: right; font-weight: bold;">S/ ${i.totalPrice.toFixed(2)}</td>
+      </tr>
+    `).join("") || "";
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Cotización - ${q.quotationNumber}</title>
+          <style>
+            body { font-family: 'Arial', sans-serif; color: #333; margin: 20px; }
+            .ticket { max-width: 600px; margin: auto; border: 1px solid #ccc; padding: 20px; border-radius: 8px; }
+            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+            .company-name { font-size: 20px; font-weight: bold; }
+            .doc-info { margin-top: 15px; font-size: 14px; }
+            .client-info { background: #f5f5f5; padding: 10px; border-radius: 6px; margin: 15px 0; font-size: 14px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th { background: #eee; padding: 8px; font-size: 12px; }
+            .totals-table { width: 220px; margin-left: auto; margin-top: 15px; font-size: 14px; }
+            .footer { text-align: center; margin-top: 30px; font-size: 12px; border-top: 1px solid #ddd; padding-top: 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="ticket">
+            <div class="header">
+              <div class="company-name">INDUSTRIA GRÁFICA DAMIAN</div>
+              <div style="font-size: 12px; color: #666;">Servicios Gráficos y Publicitarios</div>
+              <div style="font-size: 14px; font-weight: bold; margin-top: 8px; color: #00aeef;">COTIZACIÓN</div>
+              <div style="font-size: 14px; font-weight: bold;">N° ${q.quotationNumber}</div>
+            </div>
+            <div class="client-info">
+              <strong>CLIENTE:</strong> ${q.clientName}<br/>
+              <strong>DNI/RUC:</strong> ${q.clientDocument}<br/>
+              ${q.clientAddress ? `<strong>DIRECCIÓN:</strong> ${q.clientAddress}<br/>` : ""}
+              <strong>FECHA VALIDEZ:</strong> ${new Date(q.validUntil).toLocaleDateString("es-PE")}
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style="text-align: left;">DESCRIPCIÓN</th>
+                  <th>CANT</th>
+                  <th style="text-align: right;">P. UNIT</th>
+                  <th style="text-align: right;">TOTAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsRows}
+              </tbody>
+            </table>
+            <table class="totals-table">
+              <tr>
+                <td>Subtotal:</td>
+                <td style="text-align: right;">S/ ${q.subtotal.toFixed(2)}</td>
+              </tr>
+              ${q.discount > 0 ? `
+              <tr>
+                <td>Descuento:</td>
+                <td style="text-align: right; color: red;">-S/ ${q.discount.toFixed(2)}</td>
+              </tr>` : ""}
+              <tr>
+                <td>IGV (${q.tax}%):</td>
+                <td style="text-align: right;">S/ ${((q.subtotal - q.discount) * (q.tax / 100)).toFixed(2)}</td>
+              </tr>
+              <tr style="font-weight: bold; font-size: 16px; border-top: 1px solid #333;">
+                <td style="padding-top: 6px;">Total:</td>
+                <td style="text-align: right; padding-top: 6px;">S/ ${q.total.toFixed(2)}</td>
+              </tr>
+            </table>
+            <div class="footer">
+              <p>¡Gracias por su preferencia! Validez hasta ${new Date(q.validUntil).toLocaleDateString("es-PE")}</p>
+            </div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+              window.onafterprint = function() { window.close(); };
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   /* ── filtered list ── */
@@ -555,7 +681,7 @@ export const QuotationsPage: React.FC = () => {
                 {/* Sección 1: Datos del cliente */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><User size={13} /></span>
+                    <span className="section-num">1</span>
                     <h3>Datos del Cliente</h3>
                   </div>
 
@@ -650,7 +776,7 @@ export const QuotationsPage: React.FC = () => {
                 <div className="form-section-card">
                   <div className="section-title-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span className="section-num"><PackagePlus size={13} /></span>
+                      <span className="section-num">2</span>
                       <h3>Ítems de la Cotización</h3>
                     </div>
                     <button
@@ -741,7 +867,7 @@ export const QuotationsPage: React.FC = () => {
                 {/* Sección 3: Condiciones */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><Percent size={13} /></span>
+                    <span className="section-num">3</span>
                     <h3>Condiciones y Totales</h3>
                   </div>
 
@@ -841,7 +967,7 @@ export const QuotationsPage: React.FC = () => {
                 {/* Cliente */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><User size={13} /></span>
+                    <span className="section-num">1</span>
                     <h3>Datos del Cliente</h3>
                   </div>
                   <div className="form-grid">
@@ -941,6 +1067,107 @@ export const QuotationsPage: React.FC = () => {
                 </div>
               </div>
 
+                {/* Convert to Sale and Sharing suite */}
+                <div className="quotation-form-section-title" style={{ marginTop: "16px" }}>
+                  <span>Acciones de Cotización</span>
+                </div>
+                <div style={{
+                  display: "flex",
+                  gap: "10px",
+                  flexWrap: "wrap",
+                  padding: "16px",
+                  borderRadius: "16px",
+                  background: "rgba(255, 255, 255, 0.02)",
+                  border: "1px solid var(--glass-border)",
+                  marginTop: "4px"
+                }}>
+                  <button
+                    type="button"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      fontWeight: "700",
+                      fontSize: "0.82rem",
+                      border: "none",
+                      cursor: "pointer",
+                      background: "var(--primary-gradient)",
+                      color: "white"
+                    }}
+                    onClick={() => {
+                      setViewTarget(null);
+                      navigate("/sales", { state: { convertQuotation: viewTarget } });
+                    }}
+                  >
+                    <ShoppingCart size={15} /> Pasar a Venta
+                  </button>
+
+                  <button
+                    type="button"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      fontWeight: "700",
+                      fontSize: "0.82rem",
+                      border: "none",
+                      cursor: "pointer",
+                      background: "#25d366",
+                      color: "white"
+                    }}
+                    onClick={() => handleSendWhatsApp(viewTarget)}
+                  >
+                    <Send size={15} /> WhatsApp
+                  </button>
+
+                  <button
+                    type="button"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      fontWeight: "700",
+                      fontSize: "0.82rem",
+                      border: "none",
+                      cursor: "pointer",
+                      background: "#3b82f6",
+                      color: "white"
+                    }}
+                    onClick={() => handleSendEmail(viewTarget.id)}
+                    disabled={!viewTarget.clientEmail}
+                    title={!viewTarget.clientEmail ? "El cliente no tiene correo registrado" : ""}
+                  >
+                    <Send size={15} /> Correo Electrónico
+                  </button>
+
+                  <button
+                    type="button"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 18px",
+                      borderRadius: "12px",
+                      fontWeight: "700",
+                      fontSize: "0.82rem",
+                      border: "none",
+                      cursor: "pointer",
+                      background: "#64748b",
+                      color: "white"
+                    }}
+                    onClick={() => handlePrint(viewTarget)}
+                  >
+                    <Printer size={15} /> Imprimir / PDF
+                  </button>
+                </div>
+              </div>
+
               <div className="quotation-form-actions" style={{ marginTop: "12px" }}>
                 <button type="button" className="btn-cancel" onClick={() => setViewTarget(null)} style={{ width: "100%" }}>
                   Cerrar Detalle
@@ -948,8 +1175,7 @@ export const QuotationsPage: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* ══════════ DELETE CONFIRM ══════════ */}
       {deleteTarget && (

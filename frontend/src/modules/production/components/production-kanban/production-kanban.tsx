@@ -6,7 +6,6 @@ import {
   Wrench, 
   CheckCircle2, 
   Truck,
-  Building2,
   AlertTriangle,
   FileText
 } from "lucide-react";
@@ -99,10 +98,6 @@ export const ProductionKanban: React.FC<ProductionKanbanProps> = ({
                       </div>
 
                       <div className="card-footer">
-                        <div className="branch-info">
-                          <Building2 size={12} />
-                          <span>{order.branchName}</span>
-                        </div>
                         <div className="date-info">
                           <span>Entrega: {formatDate(order.promisedDate)}</span>
                         </div>

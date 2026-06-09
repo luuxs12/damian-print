@@ -145,7 +145,7 @@ export const RoleForm = ({ mode, initialData, onClose, onSuccess }: Props) => {
               {/* ── Sección 1: Datos del Perfil ── */}
               <div className="form-section-card">
                 <div className="section-title-row">
-                  <span className="section-num"><Shield size={13} /></span>
+                  <span className="section-num">1</span>
                   <h3>Datos del Perfil</h3>
                 </div>
 
@@ -167,7 +167,7 @@ export const RoleForm = ({ mode, initialData, onClose, onSuccess }: Props) => {
               {/* ── Sección 2: Permisos del sistema ── */}
               <div className="form-section-card">
                 <div className="section-title-row">
-                  <span className="section-num"><Settings size={13} /></span>
+                  <span className="section-num">2</span>
                   <h3>Permisos del sistema</h3>
                 </div>
 

@@ -10,4 +10,5 @@ export * from "./supplies";
 export * from "./production";
 export * from "./settings";
 export * from "./quotations";
+export * from "./sales";
 

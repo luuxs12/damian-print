@@ -27,7 +27,7 @@ export const productionService = {
         productName: data.productName,
         clientName: data.clientName,
         quantity: data.quantity,
-        branchName: data.branchName || "Taller Principal",
+        branchName: data.branchName || "Local Principal",
         status: data.status || "PENDING",
         promisedDate: new Date(data.promisedDate),
         notes: data.notes || null,

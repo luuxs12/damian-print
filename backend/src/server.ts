@@ -22,6 +22,8 @@ import { suppliesRoutes }   from "./modules/supplies/supplies.routes";
 import { productionRoutes } from "./modules/production/production.routes";
 import { settingsRoutes }   from "./modules/settings/settings.routes";
 import { quotationsRoutes } from "./modules/quotations/quotations.routes";
+import { salesRoutes }      from "./modules/sales/sales.routes";
+import { dashboardRoutes }  from "./modules/dashboard/dashboard.routes";
 
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -105,6 +107,8 @@ await app.register(suppliesRoutes,   { prefix: "/supplies"   });
 await app.register(productionRoutes, { prefix: "/production" });
 await app.register(settingsRoutes,    { prefix: "/settings"    });
 await app.register(quotationsRoutes,  { prefix: "/quotations"  });
+await app.register(salesRoutes,       { prefix: "/sales"       });
+await app.register(dashboardRoutes,   { prefix: "/dashboard"   });
 
 
 /* ── Arrancar ── */

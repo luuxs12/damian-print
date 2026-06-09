@@ -116,4 +116,12 @@ export const quotationsService = {
     });
     return handleResponse(res);
   },
+
+  sendEmail: async (id: number): Promise<{ message: string; sent: boolean }> => {
+    const res = await fetch(`${API_URL}/quotations/${id}/send-email`, {
+      method:  "POST",
+      headers: getHeaders(),
+    });
+    return handleResponse(res);
+  },
 };

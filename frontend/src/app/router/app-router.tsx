@@ -22,6 +22,7 @@ import { ProductionPage }   from "@/modules/production/pages/production-page";
 import { SettingsPage }     from "@/modules/settings/pages/settings-page";
 import { PresentationsPage } from "@/modules/presentations/pages/presentations-page";
 import { QuotationsPage }   from "@/modules/quotations/pages/quotations-page";
+import { SalesPage }        from "@/modules/sales/pages/sales-page";
 
 
 export const appRouter = createBrowserRouter([
@@ -60,6 +61,7 @@ export const appRouter = createBrowserRouter([
       { path: "production",    element: <ProductionPage /> },
       { path: "settings",      element: <SettingsPage />   },
       { path: "quotations",    element: <QuotationsPage /> },
+      { path: "sales",         element: <SalesPage />      },
 
       /* Ruta fallback — redirige a bienvenida si no existe la ruta */
       { path: "*", element: <Navigate to="/" replace /> },

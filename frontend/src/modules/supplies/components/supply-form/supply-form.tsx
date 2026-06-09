@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Boxes, Loader2, Package, DollarSign } from "lucide-react";
+import { X, Boxes, Loader2 } from "lucide-react";
 import { useForm }          from "react-hook-form";
 import { z }                from "zod";
 import { zodResolver }      from "@hookform/resolvers/zod";
@@ -163,7 +163,7 @@ export const SupplyForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
                 {/* ── Sección 1: Identificación ── */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><Package size={13} /></span>
+                    <span className="section-num">1</span>
                     <h3>Identificación del Insumo</h3>
                   </div>
 
@@ -243,46 +243,14 @@ export const SupplyForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
                   </div>
                 </div>
 
-                {/* ── Sección 2: Inventario y Costos ── */}
+                {/* ── Sección 2: Costos y Estado ── */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><DollarSign size={13} /></span>
-                    <h3>Inventario y Costos</h3>
+                    <span className="section-num">2</span>
+                    <h3>Costos y Estado</h3>
                   </div>
 
                   <div className="form-grid">
-                    {/* Stock */}
-                    <div className="form-group">
-                      <label htmlFor="sup-stock">Stock actual</label>
-                      <input
-                        id="sup-stock"
-                        type="number"
-                        min="0"
-                        step="any"
-                        placeholder="0"
-                        {...register("stock")}
-                      />
-                      {errors.stock && (
-                        <span className="form-error" role="alert">{errors.stock.message}</span>
-                      )}
-                    </div>
-
-                    {/* Stock mínimo */}
-                    <div className="form-group">
-                      <label htmlFor="sup-minstock">Stock mínimo</label>
-                      <input
-                        id="sup-minstock"
-                        type="number"
-                        min="0"
-                        step="any"
-                        placeholder="0"
-                        {...register("minStock")}
-                      />
-                      {errors.minStock && (
-                        <span className="form-error" role="alert">{errors.minStock.message}</span>
-                      )}
-                    </div>
-
                     {/* Costo Unitario */}
                     <div className="form-group">
                       <label htmlFor="sup-cost">
@@ -307,12 +275,12 @@ export const SupplyForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
                         <div className="status-toggle-wrapper" style={{ marginTop: "8px" }}>
                           <label className="toggle-switch">
                             <input
-                              id="sup-status"
-                              type="checkbox"
-                              checked={statusValue === "ACTIVE"}
-                              onChange={(e) =>
-                                setValue("status", e.target.checked ? "ACTIVE" : "INACTIVE")
-                              }
+                                id="sup-status"
+                                type="checkbox"
+                                checked={statusValue === "ACTIVE"}
+                                onChange={(e) =>
+                                  setValue("status", e.target.checked ? "ACTIVE" : "INACTIVE")
+                                }
                             />
                             <span className="toggle-slider" />
                           </label>

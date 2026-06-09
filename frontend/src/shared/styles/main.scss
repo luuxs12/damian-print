@@ -279,6 +279,8 @@ select {
 .production-page-header,
 .audit-logs-page__header,
 .settings-page__header,
+.quotations-page__header,
+.sales-page__header,
 .user-header,
 .role-header {
   @include glass.liquid-glass;
@@ -354,6 +356,8 @@ table tbody td {
   .production-page-header,
   .audit-logs-page__header,
   .settings-page__header,
+  .quotations-page__header,
+  .sales-page__header,
   .user-header,
   .role-header {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.72)) !important;

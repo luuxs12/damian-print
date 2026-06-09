@@ -1,4 +1,4 @@
-import { X, Boxes, Loader2, ImagePlus, Trash2, DollarSign, Info, Package } from "lucide-react";
+import { X, Boxes, Loader2, ImagePlus, Trash2, DollarSign, Info } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -201,7 +201,7 @@ export const PresentationForm = ({ mode, initialData, onClose, onSuccess }: Prop
                 {/* ── Sección 1: Información General ── */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><Package size={13} /></span>
+                    <span className="section-num">1</span>
                     <h3>Información General</h3>
                   </div>
 
@@ -319,7 +319,7 @@ export const PresentationForm = ({ mode, initialData, onClose, onSuccess }: Prop
                 {/* ── Sección 2: Especificaciones ── */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><Boxes size={13} /></span>
+                    <span className="section-num">2</span>
                     <h3>Especificaciones</h3>
                   </div>
 
@@ -385,7 +385,7 @@ export const PresentationForm = ({ mode, initialData, onClose, onSuccess }: Prop
                 {/* ── Sección 3: Precios y Costos ── */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><DollarSign size={13} /></span>
+                    <span className="section-num">3</span>
                     <h3>Precios y Costos</h3>
                   </div>
 

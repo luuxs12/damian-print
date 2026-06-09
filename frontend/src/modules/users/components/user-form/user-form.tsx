@@ -1,5 +1,5 @@
 import "./user-form.scss";
-import { X, UserPlus, Eye, EyeOff, Shield, Lock } from "lucide-react";
+import { X, UserPlus, Eye, EyeOff } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -136,7 +136,7 @@ export const UserForm = ({ mode, initialData, onClose, onSuccess }: Props) => {
               {/* ── Sección 1: Datos del Usuario ── */}
               <div className="form-section-card">
                 <div className="section-title-row">
-                  <span className="section-num"><Shield size={13} /></span>
+                  <span className="section-num">1</span>
                   <h3>Datos del Usuario</h3>
                 </div>
 
@@ -196,7 +196,7 @@ export const UserForm = ({ mode, initialData, onClose, onSuccess }: Props) => {
               {/* ── Sección 2: Seguridad ── */}
               <div className="form-section-card">
                 <div className="section-title-row">
-                  <span className="section-num"><Lock size={13} /></span>
+                  <span className="section-num">2</span>
                   <h3>Seguridad</h3>
                 </div>
                 {mode === "edit" && (

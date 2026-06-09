@@ -1,45 +1,30 @@
 .role-form-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
-
   z-index: 999;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  padding: 24px;
-
-  background:
-    var(--modal-overlay);
-
-  backdrop-filter:
-    blur(14px);
+  padding: 40px 24px;
+  background: var(--modal-overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: inherit;
 }
 
 .role-form-modal {
   width: 100%;
   max-width: 860px;
-
-  max-height: 90vh;
-
-  overflow-y: auto;
-
-  border-radius: 28px;
-
+  max-height: calc(100% - 80px);
   overflow: hidden;
-
-  background:
-    var(--modal-bg);
-
-  border:
-    1px solid var(--modal-border);
-
-  box-shadow:
-    var(--modal-shadow);
-
-  transition:
-    all 0.25s ease;
+  border-radius: 28px;
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
+  box-shadow: var(--modal-shadow);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 /* ====================================
@@ -50,7 +35,7 @@
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 28px 30px;
+  padding: 0 0 10px 0;
   border-bottom: 1px solid var(--modal-divider);
 
   h2 {
@@ -104,12 +89,26 @@
 ==================================== */
 
 .role-form {
-  padding: 30px;
-
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  gap: 0;
+}
 
-  gap: 28px;
+.role-form-scroll-area {
+  overflow-y: auto;
+  padding-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.12) transparent;
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }
 }
 
 .form-group {

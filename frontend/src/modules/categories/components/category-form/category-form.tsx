@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Tag, Loader2, AlignLeft } from "lucide-react";
+import { X, Tag, Loader2 } from "lucide-react";
 import { useForm }          from "react-hook-form";
 import { z }                from "zod";
 import { zodResolver }      from "@hookform/resolvers/zod";
@@ -139,7 +139,7 @@ export const CategoryForm = ({ mode, initialData, onClose, onSuccess }: Props) =
                 {/* Sección 1: Datos de la Categoría */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><Tag size={13} /></span>
+                    <span className="section-num">1</span>
                     <h3>Datos de la Categoría</h3>
                   </div>
 
@@ -164,7 +164,6 @@ export const CategoryForm = ({ mode, initialData, onClose, onSuccess }: Props) =
                   {/* Descripción */}
                   <div className="form-group">
                     <label htmlFor="cat-desc">
-                      <AlignLeft size={13} style={{ display: "inline", marginRight: 4, verticalAlign: "middle" }} />
                       Descripción
                     </label>
                     <textarea

@@ -24,7 +24,7 @@ export const SuppliesPage = () => {
       <div className="supplies-page__header">
         <div>
           <h1>Gestión de insumos</h1>
-          <p>Administra las materias primas, stocks y costos unitarios de los materiales de producción.</p>
+          <p>Administra las materias primas y costos unitarios de los materiales de producción.</p>
         </div>
 
         <button className="supplies-page__create-btn" onClick={handleCreate}>

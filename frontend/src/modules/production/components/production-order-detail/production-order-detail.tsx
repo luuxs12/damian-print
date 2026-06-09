@@ -19,7 +19,7 @@ export const ProductionOrderDetail: React.FC<ProductionOrderDetailProps> = ({
   onDelete
 }) => {
   const [status, setStatus] = useState("PENDING");
-  const [branchName, setBranchName] = useState("Taller Principal");
+  const [branchName, setBranchName] = useState("Local Principal");
   const [promisedDate, setPromisedDate] = useState("");
   const [notes, setNotes] = useState("");
 

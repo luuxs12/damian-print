@@ -75,7 +75,7 @@ const schema = z.object({
     .string()
     .refine(
       (v) => !isNaN(Number(v)) && Number(v) >= 0,
-      "El costo indirecto debe ser un número válido mayor o igual a 0."
+      "Los días de elaboración deben ser un número válido mayor o igual a 0."
     ),
 });
 
@@ -118,6 +118,22 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
   const [selectedSupplyId, setSelectedSupplyId] = useState("");
   const [materialQty, setMaterialQty] = useState("");
 
+  const [selectedFinishes, setSelectedFinishes] = useState<string[]>(
+    initialData?.branchName ? initialData.branchName.split(",").map((s) => s.trim()) : []
+  );
+
+  const FINISH_OPTIONS = [
+    "Laminado Mate",
+    "Laminado Brillante",
+    "Sectorizado UV",
+    "Ojales",
+    "Refilado Guillotina",
+    "Troquelado / Corte Especial",
+    "Doblado / Plizado",
+    "Costura / Engrapado",
+    "Numerado / Perforado"
+  ];
+
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
 
@@ -138,7 +154,7 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
       status: initialData?.status ?? "ACTIVE",
       manageInventory: initialData?.manageInventory ?? false,
       sendToProduction: initialData?.sendToProduction ?? false,
-      branchName: initialData?.branchName ?? "Taller Principal",
+      branchName: initialData?.branchName ?? "",
       pricePublic: initialData?.pricePublic != null ? String(initialData.pricePublic) : "0",
       priceReseller: initialData?.priceReseller != null ? String(initialData.priceReseller) : "0",
       laborCost: initialData?.laborCost != null ? String(initialData.laborCost) : "0",
@@ -172,12 +188,10 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
   // Watch fields for real-time cost analysis
   const watchedPricePublic = useWatch({ control, name: "pricePublic" }) || "0";
   const watchedLaborCost = useWatch({ control, name: "laborCost" }) || "0";
-  const watchedOverheadCost = useWatch({ control, name: "overheadCost" }) || "0";
 
   const totalMaterialsCost = productMaterials.reduce((acc, m) => acc + (Number(m.qty ?? 0) * Number(m.cost ?? 0)), 0);
   const laborCostVal = Number(watchedLaborCost) || 0;
-  const overheadCostVal = Number(watchedOverheadCost) || 0;
-  const estimatedCost = totalMaterialsCost + laborCostVal + overheadCostVal;
+  const estimatedCost = totalMaterialsCost + laborCostVal;
   const basePrice = Number(watchedPricePublic) || 0;
   const estimatedProfit = Math.max(0, basePrice - estimatedCost);
   const profitMargin = basePrice > 0 ? (estimatedProfit / basePrice) * 100 : 0;
@@ -340,7 +354,7 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
         manageInventory: data.manageInventory,
         countAsPrint: false, // Explicitly false as user does not want print/machine tracking
         sendToProduction: data.sendToProduction,
-        branchName: data.sendToProduction ? data.branchName : null,
+        branchName: selectedFinishes.join(", "),
         pricePublic: parsedPublic,
         priceReseller: parsedReseller,
         priceScales: priceScales,
@@ -860,7 +874,7 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                   <span className="section-num">4</span>
                   <h3>Información adicional</h3>
                 </div>
-
+ 
                 <div className="form-grid-two-columns" style={{ marginTop: "14px" }}>
                   
                   {/* Left: Costs Inputs, Observations, and Production Flow */}
@@ -879,14 +893,14 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                           <span className="form-error" role="alert">{errors.laborCost.message}</span>
                         )}
                       </div>
-
+ 
                       <div className="form-group">
-                        <label htmlFor="prod-overhead-cost">Gastos generales / Indirectos (S/)</label>
+                        <label htmlFor="prod-overhead-cost">Días de elaboración (producción)</label>
                         <input
                           id="prod-overhead-cost"
                           type="number"
-                          step="0.01"
-                          placeholder="0.00"
+                          step="1"
+                          placeholder="Ej: 2"
                           {...register("overheadCost")}
                         />
                         {errors.overheadCost && (
@@ -894,7 +908,7 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                         )}
                       </div>
                     </div>
-
+ 
                     <div className="form-group">
                       <label>Orden de Producción</label>
                       <div className="status-toggle-wrapper" style={{ marginTop: "4px" }}>
@@ -905,11 +919,11 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                           />
                           <span className="toggle-slider" />
                         </label>
-                        <span className="form-hint-inline" style={{ fontWeight: 600 }}>Habilitar Orden de Trabajo en Taller</span>
+                        <span className="form-hint-inline" style={{ fontWeight: 600 }}>Habilitar Orden de Trabajo en Producción</span>
                       </div>
                     </div>
                   </div>
-
+ 
                   {/* Right: Real-time Analysis Card */}
                   <div className="form-column">
                     <div className="cost-summary-card" style={{ marginTop: 0 }}>
@@ -922,10 +936,6 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                         <div className="summary-row">
                           <span>Mano de obra estimada</span>
                           <span>S/ {laborCostVal.toFixed(2)}</span>
-                        </div>
-                        <div className="summary-row">
-                          <span>Gastos generales</span>
-                          <span>S/ {overheadCostVal.toFixed(2)}</span>
                         </div>
                         <div className="divider-line" />
                         <div className="summary-row highlight">
@@ -948,13 +958,57 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                       </div>
                     </div>
                   </div>
-
+ 
                 </div>
               </div>
 
+              {/* ── SECCIÓN 5: ACABADOS DE POST-PRENSA ── */}
+              <div className="form-section-card">
+                <div className="section-title-row">
+                  <span className="section-num">5</span>
+                  <h3>Acabados del Producto / Servicio</h3>
+                </div>
+                <p className="section-subtitle">Selecciona los diferentes tipos de acabados requeridos o aplicables para este pliego.</p>
+                <div className="finishes-checkbox-grid" style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+                  gap: "12px",
+                  marginTop: "14px"
+                }}>
+                  {FINISH_OPTIONS.map((finish) => (
+                    <label key={finish} className="checkbox-label" style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      cursor: "pointer",
+                      padding: "10px 14px",
+                      borderRadius: "12px",
+                      border: "1px solid var(--glass-border)",
+                      background: selectedFinishes.includes(finish) ? "rgba(16, 185, 129, 0.1)" : "rgba(255, 255, 255, 0.01)",
+                      borderColor: selectedFinishes.includes(finish) ? "#10b981" : "var(--glass-border)",
+                      transition: "all 0.2s ease",
+                      userSelect: "none"
+                    }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedFinishes.includes(finish)}
+                        style={{ accentColor: "#10b981", width: "16px", height: "16px", cursor: "pointer" }}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedFinishes([...selectedFinishes, finish]);
+                          } else {
+                            setSelectedFinishes(selectedFinishes.filter((f) => f !== finish));
+                          }
+                        }}
+                      />
+                      <span style={{ fontSize: "0.86rem", fontWeight: 600, color: selectedFinishes.includes(finish) ? "#10b981" : "var(--text-primary)" }}>{finish}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
+            </div>
 
-              {/* Form Action Buttons */}
+            {/* Form Action Buttons */}
               <div className="product-form-actions">
                 <button
                   type="button"

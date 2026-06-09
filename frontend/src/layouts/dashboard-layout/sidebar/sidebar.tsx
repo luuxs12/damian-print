@@ -27,10 +27,10 @@ import { settingsService } from "@/modules/settings/services/settings-service";
 
 import "./sidebar.scss";
 
-const menuItems = [
+const menuItems: Array<{ label: string; icon: any; path: string; disabled?: boolean }> = [
   { label: "Dashboard",      icon: LayoutDashboard, path: "/dashboard" },
   { label: "Cotizaciones",   icon: FileText,        path: "/quotations" },
-  { label: "Ventas",         icon: ShoppingCart,    path: "/sales",         disabled: true },
+  { label: "Ventas",         icon: ShoppingCart,    path: "/sales" },
   { label: "Producción",     icon: Factory,         path: "/production" },
   { label: "Clientes",       icon: UserRound,       path: "/clients" },
   { label: "Productos",      icon: Package,         path: "/products" },

@@ -1,4 +1,4 @@
-import { X, UserRound, Loader2, MapPin, FileText } from "lucide-react";
+import { X, UserRound, Loader2 } from "lucide-react";
 import { useForm, useWatch }        from "react-hook-form";
 import { z }                        from "zod";
 import { zodResolver }              from "@hookform/resolvers/zod";
@@ -164,7 +164,7 @@ export const ClientForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
                 {/* ── Sección 1: Identificación ── */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><UserRound size={13} /></span>
+                    <span className="section-num">1</span>
                     <h3>Identificación</h3>
                   </div>
 
@@ -267,7 +267,7 @@ export const ClientForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
                 {/* ── Sección 2: Contacto y Ubicación ── */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><MapPin size={13} /></span>
+                    <span className="section-num">2</span>
                     <h3>Contacto y Ubicación</h3>
                   </div>
 
@@ -306,7 +306,7 @@ export const ClientForm = ({ mode, initialData, onClose, onSuccess }: Props) => 
                 {/* ── Sección 3: Otros Datos ── */}
                 <div className="form-section-card">
                   <div className="section-title-row">
-                    <span className="section-num"><FileText size={13} /></span>
+                    <span className="section-num">3</span>
                     <h3>Otros Datos</h3>
                   </div>
 
