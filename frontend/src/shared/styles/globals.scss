@@ -1,0 +1,28 @@
+@use "./abstracts/variables";
+@use "./base/reset";
+
+html,
+body,
+#root {
+  min-height: 100vh;
+}
+
+body {
+  font-family: Inter, sans-serif;
+
+  color: var(--color-text);
+
+  background: var(--bg-primary);
+
+  background-attachment: fixed;
+
+  overflow-x: hidden;
+
+  transition:
+    background var(--transition-normal),
+    color var(--transition-normal);
+
+  -webkit-font-smoothing: antialiased;
+
+  text-rendering: optimizeLegibility;
+}

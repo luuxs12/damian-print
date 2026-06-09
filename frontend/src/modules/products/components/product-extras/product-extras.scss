@@ -1,0 +1,443 @@
+@use "@/shared/styles/themes/liquid-glass" as glass;
+
+.product-extras-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  padding: 24px;
+  animation: overlay-fade-in 0.2s ease-out;
+}
+
+.product-extras-modal {
+  @include glass.liquid-glass;
+  width: 100%;
+  max-width: 550px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modal-slide-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &--barcode {
+    max-width: 650px;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+    .title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .header-icon {
+        color: #0d9488;
+      }
+
+      h2 {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0;
+      }
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      transition: background var(--transition-fast), color var(--transition-fast);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  .import-modal-body, .barcode-modal-body {
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    .description {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .drop-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.02);
+      text-align: center;
+      transition: border-color var(--transition-fast);
+
+      &:hover {
+        border-color: #0d9488;
+      }
+
+      &__icon {
+        color: var(--text-secondary);
+        margin-bottom: 14px;
+      }
+
+      p {
+        font-weight: 700;
+        font-size: 0.92rem;
+        color: var(--text-primary);
+        margin: 0 0 4px 0;
+      }
+
+      span {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-bottom: 14px;
+      }
+
+      .file-picker-btn {
+        padding: 8px 18px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: background var(--transition-fast);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+      }
+
+      .file-info {
+        .file-name {
+          display: block;
+          font-weight: 700;
+          color: #10b981;
+          font-size: 0.95rem;
+          margin-bottom: 4px;
+        }
+        .file-size {
+          font-size: 0.8rem;
+          color: var(--text-secondary);
+        }
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      label {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      input, select {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: var(--text-primary);
+        font-size: 0.92rem;
+        outline: none;
+        transition: border var(--transition-fast);
+
+        &:focus {
+          border-color: #0d9488;
+        }
+      }
+
+      .field-hint {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+    }
+
+    .warning-note {
+      display: flex;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      line-height: 1.4;
+      align-items: center;
+    }
+
+    /* Progress bar upload */
+    .progress-container {
+      text-align: center;
+      padding: 20px 0;
+
+      h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+      }
+
+      .progress-bar-wrapper {
+        width: 100%;
+        height: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+
+      .progress-bar-fill {
+        height: 100%;
+        background: #0d9488;
+        border-radius: 10px;
+        transition: width 0.15s ease-out;
+      }
+
+      .progress-text {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+    }
+
+    /* Success state */
+    .success-container {
+      text-align: center;
+      padding: 20px 0;
+
+      .success-icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 70px;
+        height: 70px;
+        background: rgba(16, 185, 129, 0.1);
+        border: 2px solid rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border-radius: 50%;
+        margin: 0 auto 18px;
+      }
+
+      h3 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+      }
+
+      p {
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        line-height: 1.4;
+      }
+    }
+
+    /* Barcode Sheet Labels */
+    .barcode-sheet-container {
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.01);
+      border-radius: 16px;
+      padding: 16px;
+
+      .barcode-sheet-header {
+        font-size: 0.88rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--text-primary);
+      }
+    }
+
+    .barcode-labels-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 4px;
+    }
+
+    .barcode-label-card {
+      background: white;
+      color: black;
+      padding: 10px 6px;
+      border-radius: 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+
+      .label-product-name {
+        font-size: 0.62rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 6px;
+      }
+
+      .fake-barcode-lines {
+        display: flex;
+        height: 30px;
+        align-items: stretch;
+        gap: 1px;
+        width: 100%;
+        max-width: 90px;
+        margin-bottom: 4px;
+
+        .bar {
+          background: black;
+          flex: 1;
+
+          &-thin { opacity: 1; }
+          &-medium { flex: 2; }
+          &-thick { flex: 3; }
+        }
+      }
+
+      .label-code-value {
+        font-size: 0.65rem;
+        font-family: monospace;
+        color: #475569;
+        font-weight: 700;
+      }
+    }
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 28px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+    .cancel-btn {
+      padding: 10px 22px;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background var(--transition-fast);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.04);
+      }
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 22px;
+      background: #0d9488;
+      color: white;
+      font-weight: 700;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+
+      &:hover:not(:disabled) {
+        transform: translateY(-0.5px);
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .print-action {
+      background: #0d9488;
+      &:hover {
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+      }
+    }
+  }
+}
+
+/* ── Light theme overrides ── */
+[data-theme="light"] {
+  .product-extras-modal {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(15, 23, 42, 0.08);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+
+    &__header {
+      border-bottom-color: rgba(15, 23, 42, 0.06);
+      .close-btn:hover { background: rgba(15, 23, 42, 0.04); }
+    }
+
+    .import-modal-body, .barcode-modal-body {
+      .drop-zone {
+        border-color: rgba(15, 23, 42, 0.12);
+        background: rgba(15, 23, 42, 0.01);
+        .file-picker-btn {
+          background: rgba(15, 23, 42, 0.03);
+          border-color: rgba(15, 23, 42, 0.05);
+          &:hover { background: rgba(15, 23, 42, 0.06); }
+        }
+      }
+
+      .form-group {
+        input, select {
+          background: rgba(15, 23, 42, 0.02);
+          border-color: rgba(15, 23, 42, 0.06);
+        }
+      }
+
+      .warning-note {
+        background: rgba(15, 23, 42, 0.01);
+        border-color: rgba(15, 23, 42, 0.04);
+      }
+
+      .progress-bar-wrapper {
+        background: rgba(15, 23, 42, 0.05);
+      }
+
+      .barcode-sheet-container {
+        border-color: rgba(15, 23, 42, 0.06);
+        background: rgba(15, 23, 42, 0.01);
+      }
+    }
+
+    &__footer {
+      border-top-color: rgba(15, 23, 42, 0.06);
+      .cancel-btn {
+        background: rgba(15, 23, 42, 0.02);
+        border-color: rgba(15, 23, 42, 0.06);
+        color: #475569;
+        &:hover { background: rgba(15, 23, 42, 0.05); color: #0f172a; }
+      }
+    }
+  }
+}

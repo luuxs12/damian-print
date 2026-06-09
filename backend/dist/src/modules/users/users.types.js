@@ -1,0 +1,2 @@
+/* ── DTOs de usuarios ── */
+export {};

@@ -1,0 +1,108 @@
+@use "@/shared/styles/themes/liquid-glass" as glass;
+
+.user-header {
+  @include glass.liquid-glass;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 28px;
+
+  border-radius: 28px;
+
+  border:
+    1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    0 10px 25px rgba(0,0,0,0.12);
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+
+    color:
+      var(--text-primary);
+  }
+
+  p {
+    margin-top: 6px;
+
+    color:
+      var(--text-secondary);
+  }
+}
+
+.user-header__button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  border: none;
+
+  padding: 14px 22px;
+
+  border-radius: 18px;
+
+  cursor: pointer;
+
+  font-weight: 700;
+
+  color: white;
+
+  background:
+    var(--primary-gradient);
+
+  box-shadow:
+    0 4px 12px var(--primary-shadow);
+
+  transition:
+    0.25s ease;
+
+  &:hover {
+    transform:
+      translateY(-2px);
+  }
+}
+
+/* =========================
+   LIGHT MODE
+========================= */
+
+[data-theme="light"] {
+
+  .user-header {
+    background:
+      linear-gradient(
+        135deg,
+        rgba(255,255,255,0.88),
+        rgba(255,255,255,0.72)
+      );
+
+    border:
+      1px solid rgba(15,23,42,0.06);
+
+    box-shadow:
+      none;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+  .user-header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    gap: 18px;
+  }
+
+  .user-header__button {
+    width: 100%;
+
+    justify-content: center;
+  }
+}

@@ -1,0 +1,308 @@
+@use "@/shared/styles/themes/liquid-glass" as glass;
+
+/* =========================================
+   CONTENEDOR DEL SIDEBAR
+========================================= */
+
+.sidebar-container {
+  @include glass.liquid-glass;
+
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border-radius: 34px;
+  background: var(--bg-sidebar);
+  border: 1px solid var(--glass-border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), var(--glass-shadow);
+  overflow: hidden;
+  isolation: isolate;
+  will-change: padding;
+  transition: padding 0.18s cubic-bezier(0.25, 1, 0.5, 1);
+
+  /* Estado colapsado — solo iconos */
+  &--collapsed {
+    padding: 18px 12px;
+    align-items: center;
+
+    .sidebar-nav {
+      align-items: center;
+      width: 100%;
+      padding-right: 0;
+    }
+
+    .sidebar-link {
+      justify-content: center;
+      padding: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      gap: 0;
+    }
+
+    .sidebar-logo-image {
+      max-width: 0;
+      opacity: 0;
+      transform: scale(0.85);
+      pointer-events: none;
+      margin: 0;
+    }
+
+    .sidebar-text-label,
+    .sidebar-link-text-wrapper {
+      max-width: 0;
+      opacity: 0;
+      pointer-events: none;
+      margin: 0;
+      padding: 0;
+    }
+  }
+}
+
+/* =========================================
+   LOGO / ÁREA SUPERIOR
+========================================= */
+
+.sidebar-logo {
+  height: 64px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  gap: 8px;
+}
+
+.sidebar-logo-image {
+  max-width: 200px;
+  max-height: 60px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+  flex: 1;
+  opacity: 1;
+  transform: scale(1);
+  will-change: opacity, max-width, transform, margin;
+  transition:
+    opacity 0.18s cubic-bezier(0.25, 1, 0.5, 1),
+    max-width 0.18s cubic-bezier(0.25, 1, 0.5, 1),
+    transform 0.18s cubic-bezier(0.25, 1, 0.5, 1),
+    margin 0.18s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.sidebar-menu-btn {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--glass-active);
+    color: var(--text-primary);
+  }
+
+  &.collapsed {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+}
+
+/* Cuando el sidebar está colapsado, el toggle se centra */
+.sidebar-container--collapsed .sidebar-logo {
+  justify-content: center;
+  margin-bottom: 22px;
+}
+
+/* =========================================
+   MENÚ DE NAVEGACIÓN
+========================================= */
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+}
+
+/* =========================================
+   ENLACES DEL MENÚ
+========================================= */
+
+.sidebar-link {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px;
+  border-radius: 14px;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  background-color: transparent;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  outline: none;
+  transition:
+    background-color 0.14s ease,
+    color 0.14s ease,
+    border-color 0.14s ease,
+    opacity 0.14s ease;
+
+  svg  { flex-shrink: 0; }
+  span { font-size: 0.90rem; font-weight: 500; }
+
+  &:hover {
+    background-color: rgba(255,255,255,0.07);
+    color: var(--text-primary);
+  }
+
+  &.active {
+    background: var(--glass-active);
+    border-color: var(--glass-border);
+    color: var(--text-primary);
+    svg { color: var(--text-primary); }
+  }
+
+  &--disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+
+    &:hover {
+      background-color: transparent !important;
+      color: var(--text-secondary) !important;
+    }
+  }
+}
+
+.sidebar-link-text-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 160px;
+  opacity: 1;
+  overflow: hidden;
+  will-change: opacity, max-width, margin;
+  transition:
+    opacity 0.18s cubic-bezier(0.25, 1, 0.5, 1),
+    max-width 0.18s cubic-bezier(0.25, 1, 0.5, 1),
+    margin 0.18s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.sidebar-text-label {
+  font-size: 0.90rem;
+  font-weight: 500;
+  max-width: 130px;
+  opacity: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-block;
+  will-change: opacity, max-width, margin;
+  transition:
+    opacity 0.18s cubic-bezier(0.25, 1, 0.5, 1),
+    max-width 0.18s cubic-bezier(0.25, 1, 0.5, 1),
+    margin 0.18s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.coming-soon-badge {
+  font-size: 0.62rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 1px 5px;
+  border-radius: 6px;
+  margin-left: auto;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+[data-theme="light"] .coming-soon-badge {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+
+/* =========================================
+   MODO CLARO
+========================================= */
+
+[data-theme="light"] .sidebar-container {
+  background: var(--bg-sidebar);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-surface-shadow);
+}
+
+[data-theme="light"] .sidebar-link:hover {
+  background-color: rgba(15,23,42,0.05);
+  color: #0f172a;
+}
+
+[data-theme="light"] .sidebar-link.active {
+  background: var(--glass-active);
+  border-color: var(--glass-border);
+  color: #0f172a;
+  box-shadow: 0 2px 8px rgba(15,23,42,0.05);
+  svg { color: #0f172a; }
+}
+
+[data-theme="light"] .sidebar-menu-btn {
+  background-color: transparent;
+  border-color: transparent;
+  color: var(--text-secondary);
+
+  &:hover {
+    background-color: rgba(15,23,42,0.05);
+    color: #0f172a;
+  }
+}
+
+/* =========================================
+   PANTALLAS LAPTOP (≤ 1440px o Alto ≤ 850px)
+   ========================================= */
+@media (max-width: 1440px) or (max-height: 850px) {
+  .sidebar-container {
+    padding: 14px;
+    border-radius: 28px;
+
+    &--collapsed {
+      padding: 14px 10px;
+    }
+  }
+
+  .sidebar-logo {
+    height: 52px;
+    margin-bottom: 16px;
+  }
+
+  .sidebar-logo-image {
+    max-height: 48px;
+    max-width: 175px;
+  }
+
+  .sidebar-link {
+    height: 40px;
+    gap: 10px;
+    padding: 0 10px;
+    border-radius: 10px;
+
+    span {
+      font-size: 0.84rem;
+    }
+  }
+}

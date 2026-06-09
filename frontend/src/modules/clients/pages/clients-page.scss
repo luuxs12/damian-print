@@ -1,0 +1,165 @@
+@use "@/shared/styles/themes/liquid-glass" as glass;
+
+/* ── Página ── */
+.clients-page {
+  position: relative;
+  /* Fill .dashboard-content — no page scroll */
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── Encabezado ── */
+.clients-page__header {
+  @include glass.liquid-glass;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 28px;
+
+  border-radius: 28px;
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  p {
+    margin-top: 6px;
+    color: var(--text-secondary);
+  }
+}
+
+/* ── Acciones de encabezado ── */
+.clients-page__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* ── Botón de deudas ── */
+.clients-page__debts-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(13, 148, 136, 0.4);
+  background: rgba(13, 148, 136, 0.1);
+  color: #0d9488;
+  padding: 14px 22px;
+  border-radius: 18px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: 0.25s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: rgba(13, 148, 136, 0.18);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+  }
+}
+
+/* ── Botón crear ── */
+.clients-page__create-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  border: none;
+
+  padding: 14px 22px;
+
+  border-radius: 18px;
+
+  cursor: pointer;
+
+  font-weight: 700;
+
+  color: white;
+
+  background: var(--primary-gradient);
+
+  box-shadow: 0 4px 12px var(--primary-shadow);
+
+  transition: 0.25s ease;
+
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* ── Modo claro ── */
+[data-theme="light"] .clients-page__header {
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.88),
+    rgba(255,255,255,0.72)
+  );
+  border: 1px solid rgba(15,23,42,0.06);
+  box-shadow: none;
+}
+
+/* ── Laptop ancho ── */
+@media (max-width: 1400px) {
+  .clients-page__header {
+    padding: 20px 24px;
+    border-radius: 22px;
+    h1 { font-size: 1.7rem; }
+  }
+  .clients-page__create-btn {
+    padding: 12px 18px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ── Compresión vertical (1366×768) ── */
+@media (max-height: 850px) and (min-width: 769px) {
+  .clients-page {
+  /* Fill .dashboard-content — no page scroll */
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+    gap: 14px;
+  }
+  .clients-page__header {
+    padding: 16px 22px;
+    border-radius: 20px;
+    h1 { font-size: 1.5rem; }
+    p  { margin-top: 2px; font-size: 0.85rem; }
+  }
+  .clients-page__create-btn {
+    padding: 10px 16px;
+    font-size: 0.88rem;
+    border-radius: 14px;
+  }
+}
+
+/* ── Móvil ── */
+@media (max-width: 768px) {
+  .clients-page__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+  .clients-page__create-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

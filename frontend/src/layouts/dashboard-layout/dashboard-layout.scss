@@ -1,0 +1,228 @@
+@use "@/shared/styles/themes/liquid-glass" as glass;
+
+/* =========================================
+   ESTRUCTURA PRINCIPAL DEL LAYOUT
+   Grid de 2 columnas: sidebar + área principal
+   La transición se hace en la propiedad grid-template-columns
+========================================= */
+
+.dashboard-layout {
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+  background: var(--bg-primary);
+  box-sizing: border-box;
+  will-change: grid-template-columns;
+  transition: grid-template-columns 0.18s cubic-bezier(0.25, 1, 0.5, 1);
+
+  /* Modo colapsado — solo iconos */
+  &.sidebar-collapsed {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+}
+
+/* =========================================
+   COLUMNA IZQUIERDA — Sidebar
+========================================= */
+
+.sidebar {
+  height: 100%;
+  min-height: 0;
+}
+
+/* =========================================
+   COLUMNA DERECHA — Navbar + Contenido
+========================================= */
+
+.dashboard-main {
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* =========================================
+   BARRA SUPERIOR DE NAVEGACIÓN
+========================================= */
+
+.navbar {
+  @include glass.liquid-glass;
+  flex-shrink: 0;
+  min-height: 82px;
+  padding: 0 22px;
+  border-radius: 28px;
+  background: var(--glass-navbar);
+  border: 1px solid var(--glass-border);
+  position: relative;
+  isolation: isolate;
+  overflow: visible; /* Prevents dropdown from being clipped */
+  z-index: 50; /* Ensures dropdown is above .dashboard-content */
+
+  /* El fondo ya lo da --glass-navbar; el backdrop-filter es redundante
+     y causa un artefacto gris (barra) al re-componer capas GPU en hover */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  /* Elimina la línea de brillo que también parpadeaba en hover */
+  &::after { display: none; }
+}
+
+/* =========================================
+   ÁREA DE CONTENIDO DE CADA MÓDULO
+========================================= */
+
+.dashboard-content {
+  flex: 1;
+  min-height: 0;
+  margin-top: 14px;
+  padding: 18px;
+  border-radius: 30px;
+  background: var(--glass-content);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid var(--glass-border);
+  position: relative;
+  isolation: isolate;
+  /* Fixed panel — NO page-level scroll.
+     Each module page fills this area and handles its own internal scroll. */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: filter 0.25s ease;
+
+  /* Applied when the profile dropdown is open */
+  &.content-blurred {
+    overflow: hidden;
+    pointer-events: none;
+  }
+}
+
+.dashboard-content-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: var(--modal-overlay);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: inherit;
+  animation: overlayFadeIn 0.25s ease;
+  pointer-events: auto;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes aparecerModulo {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* =========================================
+   PANTALLAS LAPTOP (≤ 1440px)
+========================================= */
+
+@media (max-width: 1440px) {
+  .dashboard-layout {
+    grid-template-columns: 250px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px;
+
+    &.sidebar-collapsed {
+      grid-template-columns: 68px minmax(0, 1fr);
+    }
+  }
+
+  .navbar {
+    min-height: 74px;
+    padding: 0 18px;
+    border-radius: 24px;
+  }
+
+  .dashboard-content {
+    margin-top: 12px;
+    padding: 16px;
+    border-radius: 24px;
+  }
+}
+
+/* =========================================
+   PANTALLAS TABLET (≤ 1200px)
+========================================= */
+
+@media (max-width: 1200px) {
+  .dashboard-layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+
+    &.sidebar-collapsed {
+      grid-template-columns: 64px minmax(0, 1fr);
+    }
+  }
+}
+
+/* =========================================
+   OVERLAY OSCURO — Para menú móvil
+========================================= */
+
+.mobile-menu-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  backdrop-filter: blur(4px);
+}
+
+/* =========================================
+   PANTALLAS MÓVIL (≤ 768px)
+========================================= */
+
+@media (max-width: 768px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+    padding: 10px;
+
+    &.sidebar-collapsed {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .navbar {
+    min-height: 72px;
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .dashboard-content {
+    margin-top: 10px;
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .mobile-menu-overlay {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -320px;
+    bottom: 0;
+    width: 280px;
+    z-index: 50;
+    padding: 14px;
+    transition: left 0.3s ease;
+  }
+
+  .sidebar-mobile-open {
+    left: 0;
+  }
+}

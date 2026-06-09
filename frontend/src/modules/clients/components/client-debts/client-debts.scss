@@ -1,0 +1,784 @@
+@use "@/shared/styles/themes/liquid-glass" as glass;
+
+.client-debts-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  padding: 24px;
+  animation: overlay-fade-in 0.2s ease-out;
+
+  /* Modales secundarios / terciarios de mayor z-index */
+  &--lvl2 { z-index: 910; }
+  &--lvl3 { z-index: 920; }
+  &--lvl4 { z-index: 930; }
+}
+
+.client-debts-modal {
+  @include glass.liquid-glass;
+  width: 100%;
+  max-width: 950px;
+  max-height: 90vh;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modal-slide-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  &--detail { max-width: 750px; }
+  &--pay-form { max-width: 550px; }
+  &--receipt { max-width: 500px; }
+
+  /* Header */
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 28px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+
+    .title-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .header-icon {
+        color: #0d9488;
+      }
+
+      h2 {
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 0;
+      }
+    }
+
+    .close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 50%;
+      transition: background var(--transition-fast), color var(--transition-fast);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  /* Stats Cards Grid */
+  .client-debts-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding: 24px 28px 12px;
+  }
+
+  .stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+
+    &__icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+    }
+
+    &__info {
+      span {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+      }
+      h3 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin: 4px 0 0 0;
+      }
+    }
+
+    /* Colors */
+    &--pink {
+      border-color: rgba(244, 63, 94, 0.15);
+      .stat-card__icon { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
+    }
+    &--yellow {
+      border-color: rgba(234, 179, 8, 0.15);
+      .stat-card__icon { background: rgba(234, 179, 8, 0.1); color: #eab308; }
+    }
+    &--blue {
+      border-color: rgba(59, 130, 246, 0.15);
+      .stat-card__icon { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    }
+  }
+
+  /* Filters */
+  .client-debts-filters {
+    display: flex;
+    gap: 12px;
+    padding: 12px 28px;
+
+    .search-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 16px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+
+      input {
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        width: 100%;
+        outline: none;
+
+        &::placeholder {
+          color: var(--text-secondary);
+        }
+      }
+    }
+
+    .filter-select-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 14px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-secondary);
+
+      select {
+        background: transparent;
+        border: none;
+        color: var(--text-primary);
+        font-size: 0.9rem;
+        outline: none;
+        cursor: pointer;
+      }
+    }
+
+    .refresh-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-weight: 700;
+      transition: background var(--transition-fast);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+    }
+  }
+
+  /* Table styles */
+  .client-debts-table-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 28px;
+  }
+
+  .client-debts-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+
+    th {
+      padding: 12px 16px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    td {
+      padding: 14px 16px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-primary);
+    }
+
+    .client-name-cell {
+      font-weight: 700;
+    }
+
+    .debt-amount {
+      font-weight: 700;
+      color: #f43f5e;
+    }
+
+    .installments-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+
+      &--vencido { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+      &--pendiente { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+      &--pagado { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    }
+
+    .view-debts-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: rgba(13, 148, 136, 0.1);
+      color: #0d9488;
+      border: 1px solid rgba(13, 148, 136, 0.15);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      transition: background var(--transition-fast), transform var(--transition-fast);
+
+      &:hover {
+        background: rgba(13, 148, 136, 0.2);
+        transform: translateY(-0.5px);
+      }
+    }
+
+    .empty-row {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+  }
+
+  /* Client details secondary modal panels */
+  .client-detail-header-panel {
+    margin: 20px 28px 10px;
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: space-between;
+    p { margin: 0; font-size: 0.95rem; }
+  }
+
+  .invoice-selector-box {
+    margin: 10px 28px 20px;
+    padding: 20px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+
+    .invoice-info-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      h4 { margin: 0; font-size: 1.1rem; font-weight: 800; }
+      .invoice-date { font-size: 0.8rem; color: var(--text-secondary); }
+      .invoice-right-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        .total-val { font-weight: 800; font-size: 1.1rem; color: var(--text-primary); }
+        .pending-pill { font-size: 0.8rem; background: rgba(244, 63, 94, 0.1); color: #f43f5e; padding: 4px 10px; border-radius: 8px; }
+      }
+    }
+
+    .invoice-additional-details {
+      display: flex;
+      gap: 24px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+      p { margin: 0; }
+    }
+
+    .installments-section-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+    }
+
+    .installments-table-wrapper {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .installments-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+
+      th {
+        padding: 8px 12px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      }
+
+      .installment-amount {
+        font-weight: 700;
+      }
+
+      .pay-installment-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        background: #0d9488;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 700;
+        transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+
+        &:hover {
+          transform: translateY(-0.5px);
+          box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3);
+        }
+      }
+    }
+  }
+
+  /* Payment Form details */
+  .payment-info-box {
+    margin: 20px 28px 10px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 0.88rem;
+      color: var(--text-primary);
+    }
+  }
+
+  .payment-form-body {
+    padding: 10px 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      label {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      input, select, textarea {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: var(--text-primary);
+        font-size: 0.92rem;
+        outline: none;
+        transition: border var(--transition-fast);
+
+        &:focus {
+          border-color: #0d9488;
+        }
+      }
+
+      .field-hint {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+    }
+
+    .warning-note {
+      display: flex;
+      gap: 10px;
+      padding: 12px;
+      background: rgba(234, 179, 8, 0.08);
+      border-radius: 10px;
+      border: 1px solid rgba(234, 179, 8, 0.15);
+      color: #eab308;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      align-items: center;
+    }
+  }
+
+  .payment-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 28px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+    .confirm-pay-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: #0d9488;
+      color: white;
+      font-weight: 700;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.92rem;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 15px rgba(13, 148, 136, 0.4);
+      }
+    }
+  }
+
+  /* Receipt ticket view */
+  .receipt-subtitle {
+    margin: 8px 28px 12px;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+  }
+
+  .receipt-ticket-wrapper {
+    padding: 12px 28px 24px;
+    max-height: 380px;
+    overflow-y: auto;
+  }
+
+  .ticket-body {
+    background: #f8fafc;
+    color: #1e293b;
+    padding: 24px;
+    border-radius: 16px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+
+    .ticket-center-text {
+      text-align: center;
+      h3 { margin: 0 0 4px 0; font-size: 0.9rem; color: #64748b; }
+      h2 { margin: 0 0 8px 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; }
+      h4 { margin: 0 0 4px 0; font-size: 1rem; color: #0f172a; }
+      p { margin: 2px 0; font-size: 0.8rem; color: #475569; }
+    }
+
+    .ticket-divider {
+      border-top: 1px dashed #cbd5e1;
+      margin: 14px 0;
+    }
+
+    .ticket-meta-info {
+      p { margin: 4px 0; color: #334155; }
+    }
+
+    .ticket-table-header {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 6px;
+    }
+
+    .ticket-table-row {
+      display: flex;
+      justify-content: space-between;
+      color: #334155;
+    }
+
+    .ticket-total-row {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #0f172a;
+    }
+  }
+
+  .receipt-actions-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 16px 28px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+
+    .print-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+
+      &--outline {
+        background: transparent;
+        border: 1px solid rgba(13, 148, 136, 0.4);
+        color: #0d9488;
+
+        &:hover {
+          background: rgba(13, 148, 136, 0.08);
+        }
+      }
+
+      &--solid {
+        background: #0d9488;
+        color: white;
+        border: none;
+
+        &:hover {
+          transform: translateY(-0.5px);
+          box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3);
+        }
+      }
+    }
+  }
+
+  /* General Action buttons */
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 28px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .close-action-btn {
+    padding: 10px 22px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background var(--transition-fast), color var(--transition-fast);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+    }
+  }
+
+  .cancel-action-btn {
+    padding: 10px 22px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background var(--transition-fast);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+  }
+}
+
+/* Animations */
+@keyframes overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-slide-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* ── Light Mode Overrides ── */
+[data-theme="light"] {
+  .client-debts-modal {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(15, 23, 42, 0.08);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+
+    &__header {
+      border-bottom-color: rgba(15, 23, 42, 0.06);
+      .close-btn:hover { background: rgba(15, 23, 42, 0.04); }
+    }
+
+    .stat-card {
+      background: rgba(15, 23, 42, 0.02);
+      border-color: rgba(15, 23, 42, 0.04);
+    }
+
+    .client-debts-filters {
+      .search-wrapper, .filter-select-wrapper {
+        background: rgba(15, 23, 42, 0.02);
+        border-color: rgba(15, 23, 42, 0.05);
+      }
+      .refresh-btn {
+        background: rgba(15, 23, 42, 0.03);
+        border-color: rgba(15, 23, 42, 0.05);
+        &:hover { background: rgba(15, 23, 42, 0.05); }
+      }
+    }
+
+    .client-debts-table {
+      th { border-bottom-color: rgba(15, 23, 42, 0.06); }
+      td { border-bottom-color: rgba(15, 23, 42, 0.04); }
+      .installments-pill {
+        background: rgba(15, 23, 42, 0.02);
+        border-color: rgba(15, 23, 42, 0.04);
+      }
+    }
+
+    .client-detail-header-panel, .invoice-selector-box, .payment-info-box {
+      background: rgba(15, 23, 42, 0.02);
+      border-color: rgba(15, 23, 42, 0.05);
+    }
+
+    .invoice-selector-box {
+      .invoice-additional-details { border-bottom-color: rgba(15, 23, 42, 0.04); }
+      .installments-table th { border-bottom-color: rgba(15, 23, 42, 0.05); }
+      .installments-table td { border-bottom-color: rgba(15, 23, 42, 0.03); }
+    }
+
+    .payment-form-body {
+      .form-group {
+        input, select, textarea {
+          background: rgba(15, 23, 42, 0.02);
+          border-color: rgba(15, 23, 42, 0.06);
+        }
+      }
+    }
+
+    .payment-modal-actions, &__footer, .receipt-actions-footer {
+      border-top-color: rgba(15, 23, 42, 0.06);
+    }
+
+    .close-action-btn, .cancel-action-btn {
+      background: rgba(15, 23, 42, 0.02);
+      border-color: rgba(15, 23, 42, 0.06);
+      color: #475569;
+      &:hover {
+        background: rgba(15, 23, 42, 0.05);
+        color: #0f172a;
+      }
+    }
+  }
+}
+
+/* ── Mobile Responsive ── */
+@media (max-width: 768px) {
+  .client-debts-modal {
+    max-height: 95vh;
+    padding: 0;
+
+    &__header {
+      padding: 16px 20px;
+      h2 { font-size: 1.15rem; }
+    }
+
+    .client-debts-stats {
+      grid-template-columns: 1fr;
+      padding: 16px 20px 8px;
+    }
+
+    .client-debts-filters {
+      flex-direction: column;
+      padding: 8px 20px;
+      .search-wrapper, .filter-select-wrapper, .refresh-btn {
+        width: 100%;
+      }
+    }
+
+    .client-debts-table-wrapper {
+      padding: 8px 20px;
+    }
+
+    .client-detail-header-panel {
+      flex-direction: column;
+      gap: 6px;
+      margin: 12px 20px 6px;
+    }
+
+    .invoice-selector-box {
+      margin: 6px 20px 12px;
+      padding: 14px;
+      .invoice-info-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        .invoice-right-info {
+          width: 100%;
+          justify-content: space-between;
+        }
+      }
+    }
+
+    .payment-info-box {
+      margin: 12px 20px 6px;
+      .info-row { flex-direction: column; gap: 4px; }
+    }
+
+    .payment-form-body {
+      padding: 6px 20px 12px;
+    }
+
+    .payment-modal-actions, &__footer, .receipt-actions-footer {
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 20px 16px;
+      button { width: 100%; justify-content: center; }
+    }
+  }
+}

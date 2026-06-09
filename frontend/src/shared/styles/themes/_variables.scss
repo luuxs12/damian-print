@@ -1,0 +1,97 @@
+:root {
+  /* =========================================
+     BRAND / ACCENT — Teal Esmeralda
+     Moderno, profesional. Combina con negro
+     profundo (dark) y blanco cálido (light).
+  ========================================= */
+
+  --primary-color:    #14B8A6;          /* teal-500  — acento base            */
+  --primary-dark:     #0D9488;          /* teal-600  — hover / pressed        */
+  --primary-light:    #5EEAD4;          /* teal-300  — estados sutiles        */
+  --primary-gradient: linear-gradient(135deg, #14B8A6, #0D9488);
+  --primary-text:     #ffffff;          /* blanco — legible sobre teal        */
+  --primary-shadow:   rgba(20, 184, 166, 0.30);
+
+  /* =========================================
+     LAYOUT
+  ========================================= */
+
+  --sidebar-width: 300px;
+
+  --navbar-height: 88px;
+
+  /* =========================================
+     RADIUS
+  ========================================= */
+
+  --radius-sm: 12px;
+
+  --radius-md: 18px;
+
+  --radius-lg: 24px;
+
+  --radius-xl: 32px;
+
+  /* =========================================
+     TRANSICIONES — Ultra fluidas y rápidas
+  ========================================= */
+
+  /* Ultra rápida: hover de botones, cambios menores */
+  --transition-fast:   0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Normal: cambios de color, bordes, fondos */
+  --transition-normal: 0.14s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Lenta: expansiones, modales, elementos grandes */
+  --transition-slow:   0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* =========================================
+     GLASS SYSTEM
+  ========================================= */
+
+  --glass-blur: 30px;
+
+  --glass-shadow:
+    0 10px 40px rgba(0,0,0,0.14);
+
+  --glass-surface:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,0.10),
+      rgba(255,255,255,0.03)
+    );
+
+  --glass-border:
+    rgba(255,255,255,0.04);
+
+  /* No usamos glows de neón — sombras sutiles en su lugar */
+  --glow-primary:   none;
+  --glow-secondary: none;
+
+  /* =========================================
+     TEXT
+  ========================================= */
+
+  --color-text:
+    #ffffff;
+
+  --color-text-muted:
+    rgba(255,255,255,0.68);
+
+  /* =========================================
+     BACKGROUNDS
+  ========================================= */
+
+  --color-background:
+    #0d0d0d;
+
+  --color-surface:
+    rgba(255,255,255,0.02);
+
+  /* =========================================
+     BORDERS
+  ========================================= */
+
+  --color-border:
+    rgba(255,255,255,0.04);
+}

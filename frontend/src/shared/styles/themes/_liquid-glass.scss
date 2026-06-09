@@ -1,0 +1,33 @@
+/* =========================================
+   MIXIN PRINCIPAL — Efecto cristal líquido
+   El mixin es neutral; el tema controla los colores
+========================================= */
+
+@mixin liquid-glass {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+
+  /* Fondo y borde vienen de las variables del tema activo */
+  background: var(--glass-surface-bg);
+  border: 1px solid var(--glass-surface-border);
+
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+
+  box-shadow: var(--glass-surface-shadow);
+
+  isolation: isolate;
+
+  /* Línea de brillo en la parte superior (efecto cristal pulido) */
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: var(--glass-shine-line);
+    pointer-events: none;
+  }
+}
