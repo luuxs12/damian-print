@@ -17,9 +17,13 @@ import {
   Printer,
   Send,
   ShoppingCart,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { generatePageNumbers } from "@/shared/utils/pagination";
 import {
   quotationsService,
   type Quotation,
@@ -28,9 +32,11 @@ import {
   type CreateQuotationPayload,
 } from "../services/quotations-service";
 import { ConfirmModal } from "@/shared/components/ui/confirm-modal";
+import { SuccessAnimation } from "@/shared/components/ui/success-animation";
 import { clientsService } from "../../clients/services/clients-service";
 import { productsService } from "../../products/services/products-service";
 import { presentationsService } from "../../presentations/services/presentations-service";
+import { productionService } from "../../production/services/production-service";
 import type { Client } from "../../clients/types/client.types";
 import "./quotations-page.scss";
 
@@ -39,6 +45,10 @@ export interface UIQuotationItem extends QuotationItem {
   searchQuery?: string;
   showSuggestions?: boolean;
   productId?: number | null;
+  promisedDate?: string;
+  priceType?: "PUBLIC" | "RESELLER" | "SPECIAL" | "SCALE" | "MANUAL";
+  selectedPresentationId?: string;
+  productOverheadDays?: number;
 }
 
 export interface CatalogItemOption {
@@ -47,6 +57,10 @@ export interface CatalogItemOption {
   label: string;
   description: string;
   price: number;
+  priceReseller?: number;
+  hasScales?: boolean;
+  product?: any;
+  presentation?: any;
 }
 
 
@@ -56,6 +70,7 @@ const STATUS_CONFIG = {
   APPROVED: { label: "Aprobada",   icon: CheckCircle, cls: "status-approved" },
   REJECTED: { label: "Rechazada",  icon: XCircle,     cls: "status-rejected" },
   EXPIRED:  { label: "Expirada",   icon: XCircle,     cls: "status-expired"  },
+  VENDIDA:  { label: "Vendida",    icon: CheckCircle, cls: "status-vendida"  },
 } as const;
 
 const fmt = (n: number) =>
@@ -73,6 +88,10 @@ const emptyItem = (): UIQuotationItem => ({
   catalogOptionId: "",
   searchQuery: "",
   showSuggestions: false,
+  promisedDate: "",
+  priceType: "PUBLIC",
+  selectedPresentationId: "",
+  productOverheadDays: 0,
 });
 
 /* ───────── empty form ───────── */
@@ -100,11 +119,13 @@ export const QuotationsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("ALL");
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
 
-  /* Catalog and Clients dropdown options */
   const [clients, setClients] = useState<Client[]>([]);
   const [catalogOptions, setCatalogOptions] = useState<CatalogItemOption[]>([]);
-  const [products, setProducts] = useState<Array<{ id: number; name: string; pricePublic: number | string }>>([]);
+  const [presentations, setPresentations] = useState<any[]>([]);
+  const [productionOrders, setProductionOrders] = useState<any[]>([]);
 
   /* modals */
   const [showForm, setShowForm]         = useState(false);
@@ -116,34 +137,43 @@ export const QuotationsPage: React.FC = () => {
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
   const [isSearchingDoc, setIsSearchingDoc] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  const isLocked = editTarget?.status === "VENDIDA";
 
   /* ── fetch ── */
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const [data, s, cls, prods, pres] = await Promise.all([
+      const [data, s, cls, prods, pres, prodOrders] = await Promise.all([
         quotationsService.getAll(),
         quotationsService.getStats(),
         clientsService.getClients(),
         productsService.getProducts(),
         presentationsService.getPresentations(),
+        productionService.getProductionOrders().catch(() => []),
       ]);
       setQuotations(data);
       setStats(s);
       setClients(cls.filter((c) => c.status === "ACTIVE"));
+      setPresentations(pres.filter((p) => p.status === "ACTIVE"));
+      setProductionOrders(prodOrders);
 
       const activeProds = prods.filter((p) => p.status === "ACTIVE");
       const activePres = pres.filter((p) => p.status === "ACTIVE");
-      setProducts(activeProds);
       const options: CatalogItemOption[] = [];
 
       activeProds.forEach((p) => {
+        const typeLabel = p.type === "SERVICE" ? "Servicio" : p.type === "MATERIAL" ? "Material" : "Producto";
         options.push({
           type: "PRODUCT",
           id: `prod-${p.id}`,
-          label: `[Producto] ${p.name}`,
+          label: `[${typeLabel}] ${p.code ? `${p.code} - ` : ""}${p.name}`,
           description: p.name,
           price: Number(p.pricePublic) || 0,
+          priceReseller: Number(p.priceReseller) || 0,
+          hasScales: Boolean(p.priceScales && p.priceScales.length > 0),
+          product: p,
         });
       });
 
@@ -154,18 +184,24 @@ export const QuotationsPage: React.FC = () => {
           label: `[Presentación] ${pr.productName || "Producto"} - ${pr.name}`,
           description: `${pr.productName || "Producto"} - ${pr.name}${pr.size ? ` (${pr.size})` : ""}${pr.material ? `, ${pr.material}` : ""}${pr.finish ? `, ${pr.finish}` : ""}`,
           price: Number(pr.price) || 0,
+          presentation: pr,
         });
       });
 
       setCatalogOptions(options);
-    } catch {
-      toast.error("Error al cargar cotizaciones.");
+    } catch (err: any) {
+      console.error("Error al cargar cotizaciones:", err);
+      toast.error(`Error al cargar cotizaciones: ${err.message || err}`);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterStatus]);
 
   /* ── open form ── */
   const openCreate = () => {
@@ -189,12 +225,35 @@ export const QuotationsPage: React.FC = () => {
       validUntil:     detail.validUntil.substring(0, 10),
       notes:          detail.notes || "",
       items:          detail.items?.map((i) => {
-        const opt = catalogOptions.find((o) => o.description === i.description);
+        const cleanDesc = i.description.split(" (Acabado:")[0];
+        const opt = catalogOptions.find((o) => o.description === cleanDesc);
+        
+        let presentationId = "";
+        if (opt && opt.type === "PRODUCT" && opt.product && i.description.includes(" (Acabado:")) {
+          const match = i.description.match(/\(Acabado:\s*(.*?)\)/);
+          if (match && match[1]) {
+            const presName = match[1].trim();
+            const foundPres = presentations.find(
+              (pr) => pr.productId === opt.product.id && pr.name.toLowerCase() === presName.toLowerCase()
+            );
+            if (foundPres) {
+              presentationId = String(foundPres.id);
+            }
+          }
+        }
+
         return {
-          ...i,
+          description: i.description,
+          quantity:    i.quantity,
+          unitPrice:   i.unitPrice,
+          totalPrice:  i.totalPrice,
           catalogOptionId: opt ? opt.id : "",
           searchQuery: opt ? opt.label : i.description,
           showSuggestions: false,
+          promisedDate: i.promisedDate ? i.promisedDate.substring(0, 10) : "",
+          priceType: "MANUAL" as const,
+          selectedPresentationId: presentationId,
+          productOverheadDays: opt?.product?.overheadCost ? Number(opt.product.overheadCost) : 0,
         };
       }) || [emptyItem()],
     });
@@ -256,19 +315,18 @@ export const QuotationsPage: React.FC = () => {
     }
   };
 
-  /* ── item handlers ── */
-  const updateItem = (idx: number, field: keyof UIQuotationItem, value: string | number) => {
+  const updateItemFields = (idx: number, fields: Partial<UIQuotationItem>) => {
     setForm((prev) => {
       const items = [...prev.items];
-      items[idx] = {
-        ...items[idx],
-        [field]: value,
-        totalPrice: field === "quantity"
-          ? Number(value) * items[idx].unitPrice
-          : field === "unitPrice"
-          ? items[idx].quantity * Number(value)
-          : items[idx].totalPrice,
+      const current = items[idx] || emptyItem();
+      const updated = {
+        ...current,
+        ...fields,
       };
+      const qty = updated.quantity;
+      const price = updated.unitPrice;
+      updated.totalPrice = qty * price;
+      items[idx] = updated;
       return { ...prev, items };
     });
   };
@@ -277,6 +335,116 @@ export const QuotationsPage: React.FC = () => {
   const addItem    = () => setForm((p) => ({ ...p, items: [...p.items, emptyItem()] }));
   const removeItem = (idx: number) =>
     setForm((p) => ({ ...p, items: p.items.filter((_, i) => i !== idx) }));
+
+  const duplicateItem = (idx: number) => {
+    setForm((prev) => {
+      const items = [...prev.items];
+      const cloned = {
+        ...items[idx],
+        showSuggestions: false,
+      };
+      items.splice(idx + 1, 0, cloned);
+      return { ...prev, items };
+    });
+  };
+
+  const getOrdersCountForDate = (dateStr: string) => {
+    if (!dateStr) return 0;
+    const chosen = dateStr.split("T")[0];
+    return productionOrders.filter((o) => {
+      if (!o.promisedDate) return false;
+      const oDate = o.promisedDate.split("T")[0];
+      return oDate === chosen;
+    }).length;
+  };
+
+  const getMinRecommendedDate = (overheadDays: number) => {
+    if (!overheadDays) return "";
+    const d = new Date();
+    d.setDate(d.getDate() + overheadDays);
+    return d.toISOString().split("T")[0];
+  };
+
+  const getProductPrices = (item: UIQuotationItem) => {
+    if (!item.catalogOptionId) return [];
+    const opt = catalogOptions.find((o) => o.id === item.catalogOptionId);
+    if (!opt || opt.type !== "PRODUCT" || !opt.product) return [];
+
+    const p = opt.product;
+    const pricesList = [
+      { type: "PUBLIC", label: `Público: S/ ${Number(p.pricePublic).toFixed(2)}`, value: Number(p.pricePublic) },
+      { type: "RESELLER", label: `Revendedor: S/ ${Number(p.priceReseller).toFixed(2)}`, value: Number(p.priceReseller) },
+    ];
+
+    if (form.clientId && p.specialPrices && p.specialPrices.length > 0) {
+      const sp = p.specialPrices.find((s: any) => s.clientId === form.clientId);
+      if (sp) {
+        pricesList.push({
+          type: "SPECIAL",
+          label: `⭐ Especial: S/ ${Number(sp.price).toFixed(2)}`,
+          value: Number(sp.price)
+        });
+      }
+    }
+
+    if (p.priceScales && p.priceScales.length > 0) {
+      const applicableScale = [...p.priceScales]
+        .sort((a: any, b: any) => b.minQty - a.minQty)
+        .find((scale: any) => item.quantity >= scale.minQty);
+      
+      if (applicableScale) {
+        pricesList.push({
+          type: "SCALE",
+          label: `📦 Escala (Min. ${applicableScale.minQty}): S/ ${Number(applicableScale.price).toFixed(2)}`,
+          value: Number(applicableScale.price)
+        });
+      } else {
+        const nextScale = [...p.priceScales].sort((a: any, b: any) => a.minQty - b.minQty)[0];
+        if (nextScale) {
+          pricesList.push({
+            type: "SCALE",
+            label: `📦 Escala (Min. ${nextScale.minQty}): S/ ${Number(nextScale.price).toFixed(2)} (Faltan ${nextScale.minQty - item.quantity} u.)`,
+            value: Number(nextScale.price)
+          });
+        }
+      }
+    }
+
+    return pricesList;
+  };
+
+  const recalculateItemPrice = (item: UIQuotationItem, qty: number, priceType: string, presId: string) => {
+    let base = item.unitPrice;
+
+    const opt = catalogOptions.find((o) => o.id === item.catalogOptionId);
+    if (opt && opt.type === "PRODUCT" && opt.product) {
+      const p = opt.product;
+      if (priceType === "PUBLIC") {
+        base = Number(p.pricePublic);
+      } else if (priceType === "RESELLER") {
+        base = Number(p.priceReseller);
+      } else if (priceType === "SPECIAL" && form.clientId) {
+        const sp = p.specialPrices?.find((s: any) => s.clientId === form.clientId);
+        base = sp ? Number(sp.price) : Number(p.pricePublic);
+      } else if (priceType === "SCALE") {
+        const applicableScale = [...(p.priceScales || [])]
+          .sort((a: any, b: any) => b.minQty - a.minQty)
+          .find((scale: any) => qty >= scale.minQty);
+        base = applicableScale ? Number(applicableScale.price) : Number(p.pricePublic);
+      }
+    } else if (opt && opt.type === "PRESENTATION") {
+      base = opt.price;
+    }
+
+    if (presId) {
+      const chosenPres = presentations.find((pr) => String(pr.id) === String(presId));
+      if (chosenPres) {
+        base += Number(chosenPres.price);
+      }
+    }
+
+    return base;
+  };
 
   /* ── computed totals ── */
   const subtotal = form.items.reduce((a, i) => a + i.quantity * i.unitPrice, 0);
@@ -330,12 +498,17 @@ export const QuotationsPage: React.FC = () => {
         clientPhone:    form.clientPhone || undefined,
         clientEmail:    form.clientEmail || undefined,
         clientAddress:  form.clientAddress || undefined,
-        items:          form.items.map((i) => ({
-          description: i.description,
-          quantity:    i.quantity,
-          unitPrice:   i.unitPrice,
-          totalPrice:  i.quantity * i.unitPrice,
-        })),
+        items:          form.items.map((i) => {
+          const chosenPres = presentations.find((pr) => String(pr.id) === String(i.selectedPresentationId));
+          const suffix = chosenPres ? ` (Acabado: ${chosenPres.name})` : "";
+          return {
+            description: i.description.includes(" (Acabado:") ? i.description : (i.description + suffix),
+            quantity:    i.quantity,
+            unitPrice:   i.unitPrice,
+            totalPrice:  i.quantity * i.unitPrice,
+            promisedDate: i.promisedDate || undefined,
+          };
+        }),
         discount:   form.discount,
         tax:        form.tax,
         validUntil: form.validUntil,
@@ -345,10 +518,12 @@ export const QuotationsPage: React.FC = () => {
         const updated = await quotationsService.update(editTarget.id, payload);
         setQuotations((prev) => prev.map((q) => (q.id === updated.id ? updated : q)));
         toast.success("Cotización actualizada con éxito.");
+        setSuccessMsg("¡Cotización actualizada!");
       } else {
         const created = await quotationsService.create(payload);
         setQuotations((prev) => [created, ...prev]);
         toast.success(`Cotización ${created.quotationNumber} creada con éxito.`);
+        setSuccessMsg(`¡Cotización ${created.quotationNumber} creada!`);
       }
       setShowForm(false);
       fetchAll(); // refresh stats
@@ -367,6 +542,7 @@ export const QuotationsPage: React.FC = () => {
       setQuotations((prev) => prev.map((q) => (q.id === id ? { ...q, status: updated.status } : q)));
       if (viewTarget?.id === id) setViewTarget((v) => v ? { ...v, status: updated.status } : v);
       toast.success("Estado actualizado.");
+      setSuccessMsg("¡Estado de cotización actualizado!");
       fetchAll();
     } catch (err: unknown) {
       const msg = (err as { message?: string }).message || "Error al cambiar estado.";
@@ -382,6 +558,7 @@ export const QuotationsPage: React.FC = () => {
       setQuotations((prev) => prev.filter((q) => q.id !== deleteTarget.id));
       setDeleteTarget(null);
       toast.success("Cotización eliminada.");
+      setSuccessMsg("¡Cotización eliminada!");
       fetchAll();
     } catch (err: unknown) {
       const msg = (err as { message?: string }).message || "Error al eliminar.";
@@ -393,9 +570,20 @@ export const QuotationsPage: React.FC = () => {
   const handleSendEmail = async (id: number) => {
     const loader = toast.loading("Enviando correo de cotización...");
     try {
-      const res = await quotationsService.sendEmail(id);
+      const res = await quotationsService.sendEmail(id) as any;
       if (res.sent) {
-        toast.success("Correo enviado con éxito.", { id: loader });
+        if (res.previewUrl) {
+          toast.success("Correo enviado con éxito (Modo de Prueba).", {
+            id: loader,
+            duration: 15000,
+            action: {
+              label: "Ver Correo",
+              onClick: () => window.open(res.previewUrl, "_blank"),
+            },
+          });
+        } else {
+          toast.success("Correo enviado con éxito.", { id: loader });
+        }
       } else {
         toast.error("No se pudo enviar. SMTP no configurado.", { id: loader });
       }
@@ -520,6 +708,12 @@ export const QuotationsPage: React.FC = () => {
     return matchSearch && matchStatus;
   });
 
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  const paginated = filtered.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   /* ══════════ RENDER ══════════ */
   return (
     <div className="quotations-page">
@@ -621,7 +815,7 @@ export const QuotationsPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((q) => {
+                {paginated.map((q) => {
                   const cfg = STATUS_CONFIG[q.status];
                   return (
                     <tr key={q.id}>
@@ -657,6 +851,42 @@ export const QuotationsPage: React.FC = () => {
             </table>
           )}
         </div>
+
+        <div className="shared-pagination">
+          <button
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+            title="Anterior"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          {generatePageNumbers(currentPage, totalPages).map((page, idx) => {
+            if (page === "...") {
+              return (
+                <span key={`ellipsis-${idx}`} className="pagination-ellipsis">
+                  ...
+                </span>
+              );
+            }
+
+            return (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(Number(page))}
+                className={currentPage === page ? "active" : ""}
+              >
+                {page}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages || totalPages === 0}
+            title="Siguiente"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
       {/* ══════════ FORM MODAL ══════════ */}
       {showForm && (
@@ -677,6 +907,25 @@ export const QuotationsPage: React.FC = () => {
             </div>
 
             <form className="quotation-form" onSubmit={handleSave} noValidate>
+              {isLocked && (
+                <div style={{
+                  background: "rgba(239, 68, 68, 0.1)",
+                  border: "1px solid rgba(239, 68, 68, 0.2)",
+                  color: "#ef4444",
+                  padding: "10px 16px",
+                  borderRadius: "12px",
+                  fontSize: "0.85rem",
+                  fontWeight: 600,
+                  margin: "12px 24px 0 24px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px"
+                }}>
+                  <AlertCircle size={16} />
+                  <span>Esta cotización ya fue vendida y no se puede modificar.</span>
+                </div>
+              )}
+
               <div className="quotation-form-scroll-area">
                 {/* Sección 1: Datos del cliente */}
                 <div className="form-section-card">
@@ -686,14 +935,15 @@ export const QuotationsPage: React.FC = () => {
                   </div>
 
                   <div className="form-grid">
-                    <div className="form-group form-group--full">
+                    <div className="form-group">
                       <label>DNI / RUC *</label>
-                      <div style={{ display: "flex", gap: "8px", width: "100%", maxWidth: "440px" }}>
+                      <div style={{ display: "flex", gap: "8px", width: "100%" }}>
                         <input
                           type="text"
                           placeholder="Ingrese DNI o RUC y pulse Buscar..."
                           value={form.clientDocument}
-                          style={{ flex: 1, maxWidth: "none" }}
+                          style={{ flex: 1 }}
+                          disabled={isLocked}
                           onChange={(e) => {
                             const val = e.target.value.replace(/\D/g, "");
                             setForm((p) => ({ ...p, clientDocument: val }));
@@ -718,7 +968,8 @@ export const QuotationsPage: React.FC = () => {
                           type="button"
                           className="btn-search-doc"
                           onClick={handleSearchDocument}
-                          disabled={isSearchingDoc}
+                          disabled={isSearchingDoc || isLocked}
+                          style={{ opacity: isLocked ? 0.5 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
                         >
                           {isSearchingDoc ? (
                             <Loader2 size={16} className="spin" />
@@ -729,24 +980,26 @@ export const QuotationsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="form-group form-group--full">
-                      <label>Nombre completo / Razón social *</label>
-                      <input
-                        type="text"
-                        placeholder="Ej. Juan Pérez / Empresa ABC S.A.C."
-                        value={form.clientName}
-                        onChange={(e) => setForm((p) => ({ ...p, clientName: e.target.value }))}
-                        required
-                      />
-                    </div>
-
                     <div className="form-group">
                       <label>Teléfono</label>
                       <input
                         type="text"
                         placeholder="Ej. 987654321"
                         value={form.clientPhone}
+                        disabled={isLocked}
                         onChange={(e) => setForm((p) => ({ ...p, clientPhone: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Nombre completo / Razón social *</label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Juan Pérez / Empresa ABC S.A.C."
+                        value={form.clientName}
+                        disabled={isLocked}
+                        onChange={(e) => setForm((p) => ({ ...p, clientName: e.target.value }))}
+                        required
                       />
                     </div>
 
@@ -756,6 +1009,7 @@ export const QuotationsPage: React.FC = () => {
                         type="email"
                         placeholder="Ej. cliente@email.com"
                         value={form.clientEmail}
+                        disabled={isLocked}
                         onChange={(e) => setForm((p) => ({ ...p, clientEmail: e.target.value }))}
                       />
                     </div>
@@ -766,6 +1020,7 @@ export const QuotationsPage: React.FC = () => {
                         type="text"
                         placeholder="Ej. Av. Principal 123, Lima"
                         value={form.clientAddress}
+                        disabled={isLocked}
                         onChange={(e) => setForm((p) => ({ ...p, clientAddress: e.target.value }))}
                       />
                     </div>
@@ -773,7 +1028,7 @@ export const QuotationsPage: React.FC = () => {
                 </div>
 
                 {/* Sección 2: Ítems */}
-                <div className="form-section-card">
+                <div className="form-section-card form-section-card--quotation-items">
                   <div className="section-title-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                       <span className="section-num">2</span>
@@ -783,84 +1038,307 @@ export const QuotationsPage: React.FC = () => {
                       type="button"
                       className="btn-add-item"
                       onClick={addItem}
-                      style={{ height: "30px", padding: "0 12px", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", margin: 0 }}
+                      disabled={isLocked}
+                      style={{ height: "30px", padding: "0 12px", display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", margin: 0, opacity: isLocked ? 0.5 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
                     >
                       <Plus size={14} /> Agregar ítem
                     </button>
                   </div>
 
-                  <div className="q-items-list" style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "8px" }}>
-                    {form.items.map((item, idx) => (
-                      <div className="quotation-form-item-row" key={idx}>
-                        <div className="form-group">
-                          <label className={idx === 0 ? "" : "mobile-only-label"}>Producto / Servicio *</label>
-                          <select
-                            value={item.productId || ""}
-                            onChange={(e) => {
-                              const pid = e.target.value ? Number(e.target.value) : 0;
-                              updateItem(idx, "productId", pid);
-                              if (pid) {
-                                const prod = products.find((p) => p.id === pid);
-                                if (prod) {
-                                  updateItem(idx, "description", prod.name);
-                                  updateItem(idx, "unitPrice", Number(prod.pricePublic));
-                                }
-                              }
-                            }}
-                          >
-                            <option value="">-- Buscar en catálogo --</option>
-                            {products.map((p) => (
-                              <option key={p.id} value={p.id}>
-                                {p.name} (S/ {Number(p.pricePublic).toFixed(2)})
-                              </option>
-                            ))}
-                          </select>
+                  <div className="q-items-list">
+                    {form.items.map((item, idx) => {
+                      const minDate = getMinRecommendedDate(item.productOverheadDays || 0);
+                      const ordersOnDate = item.promisedDate ? getOrdersCountForDate(item.promisedDate) : 0;
+                      const dateStatusColor = !item.promisedDate ? "transparent" : ordersOnDate >= 3 ? "#ef4444" : ordersOnDate >= 1 ? "#eab308" : "#10b981";
+                      const pricesList = getProductPrices(item);
+
+                      // Find available finishes for this product if applicable
+                      const currentOpt = catalogOptions.find((o) => o.id === item.catalogOptionId);
+                      const availableFinishes = currentOpt?.type === "PRODUCT"
+                        ? presentations.filter(pr => pr.productId === currentOpt.product.id)
+                        : [];
+
+                      return (
+                        <div className="quotation-form-item-row" key={idx}>
+                          {/* 1. Producto / Servicio */}
+                          <div className="form-group">
+                            <label className={idx === 0 ? "" : "mobile-only-label"}>Producto / Servicio *</label>
+                            <div className="catalog-search-container" style={{ position: "relative" }}>
+                              <input
+                                type="text"
+                                placeholder="Buscar en catálogo (nombre o código)..."
+                                value={item.searchQuery || ""}
+                                disabled={isLocked}
+                                onChange={(e) => {
+                                  const q = e.target.value;
+                                  updateItemFields(idx, {
+                                    searchQuery: q,
+                                    showSuggestions: q.trim().length > 0
+                                  });
+                                }}
+                                onFocus={() => {
+                                  if (item.searchQuery) {
+                                    updateItemFields(idx, { showSuggestions: true });
+                                  }
+                                }}
+                                onBlur={() => {
+                                  setTimeout(() => {
+                                    updateItemFields(idx, { showSuggestions: false });
+                                  }, 200);
+                                }}
+                              />
+                              {item.showSuggestions && (
+                                <div className="catalog-suggestions-dropdown">
+                                  {catalogOptions
+                                    .filter((o) => {
+                                      const query = (item.searchQuery || "").toLowerCase().trim();
+                                      if (!query) return false;
+                                      return (
+                                        o.label.toLowerCase().includes(query) ||
+                                        (o.description && o.description.toLowerCase().includes(query)) ||
+                                        (o.product?.code && o.product.code.toLowerCase().includes(query))
+                                      );
+                                    })
+                                    .slice(0, 5)
+                                    .map((opt) => (
+                                      <div
+                                        key={opt.id}
+                                        className="suggestion-item"
+                                        onMouseDown={(e) => {
+                                          e.preventDefault();
+                                          const overhead = opt.product?.overheadCost ? Number(opt.product.overheadCost) : 0;
+                                          const calculatedPrice = recalculateItemPrice({
+                                            ...item,
+                                            catalogOptionId: opt.id,
+                                            priceType: "PUBLIC",
+                                            selectedPresentationId: ""
+                                          }, item.quantity, "PUBLIC", "");
+                                          
+                                          updateItemFields(idx, {
+                                            catalogOptionId: opt.id,
+                                            description: opt.description || opt.label,
+                                            searchQuery: opt.label,
+                                            showSuggestions: false,
+                                            priceType: "PUBLIC",
+                                            selectedPresentationId: "",
+                                            productOverheadDays: overhead,
+                                            unitPrice: calculatedPrice,
+                                          });
+                                        }}
+                                      >
+                                        <div className="suggestion-label" style={{ fontWeight: 600 }}>{opt.label}</div>
+                                        <div className="suggestion-price-info" style={{ fontSize: "0.75rem", color: "var(--text-secondary)", display: "flex", flexDirection: "column", gap: "2px", marginTop: "4px" }}>
+                                          <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                            <span>Precio Público:</span>
+                                            <strong>{fmt(opt.price)}</strong>
+                                          </div>
+                                          {opt.priceReseller !== undefined && opt.priceReseller > 0 && (
+                                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                              <span>Precio Revendedor:</span>
+                                              <strong>{fmt(opt.priceReseller)}</strong>
+                                            </div>
+                                          )}
+                                          {opt.hasScales && (
+                                            <div style={{ color: "var(--primary-color)", fontStyle: "italic" }}>
+                                              * Este producto tiene precios por escala / mayoreo.
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
+                                  {catalogOptions.filter((o) => {
+                                    const query = (item.searchQuery || "").toLowerCase().trim();
+                                    if (!query) return false;
+                                    return (
+                                      o.label.toLowerCase().includes(query) ||
+                                      (o.description && o.description.toLowerCase().includes(query)) ||
+                                      (o.product?.code && o.product.code.toLowerCase().includes(query))
+                                    );
+                                  }).length === 0 && (
+                                    <div className="suggestion-item suggestion-item--empty">
+                                      No se encontraron resultados
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 2. Acabado (Finishes) */}
+                          <div className="form-group">
+                            <label className={idx === 0 ? "" : "mobile-only-label"}>Acabado</label>
+                            {availableFinishes.length > 0 ? (
+                              <select
+                                value={item.selectedPresentationId || ""}
+                                disabled={isLocked}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  const base = recalculateItemPrice(item, item.quantity, item.priceType || "PUBLIC", val);
+                                  updateItemFields(idx, {
+                                    selectedPresentationId: val,
+                                    unitPrice: base
+                                  });
+                                }}
+                              >
+                                <option value="">Ninguno (Estándar)</option>
+                                {availableFinishes.map((f) => (
+                                  <option key={f.id} value={f.id}>{f.name} (+S/ {f.price})</option>
+                                ))}
+                              </select>
+                            ) : (
+                              <select disabled style={{ cursor: "not-allowed", opacity: 0.7 }}>
+                                <option value="">No aplica</option>
+                              </select>
+                            )}
+                          </div>
+
+                          {/* 3. Descripción libre */}
+                          <div className="form-group">
+                            <label className={idx === 0 ? "" : "mobile-only-label"}>Descripción libre *</label>
+                            <input
+                              type="text"
+                              placeholder="Ej. Impresión offset 4 colores..."
+                              value={item.description}
+                              disabled={isLocked}
+                              onChange={(e) => updateItemFields(idx, { description: e.target.value })}
+                              required
+                            />
+                          </div>
+
+                          {/* 4. Fecha Entrega (Prod.) */}
+                          <div className="form-group">
+                            <label className={idx === 0 ? "" : "mobile-only-label"}>Fecha Entrega (Prod.)</label>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              <input
+                                type="date"
+                                value={item.promisedDate || ""}
+                                min={minDate || undefined}
+                                disabled={isLocked}
+                                onChange={(e) => updateItemFields(idx, { promisedDate: e.target.value })}
+                              />
+                              {item.promisedDate && (
+                                <div style={{ fontSize: "0.65rem", display: "flex", alignItems: "center", gap: "4px", color: dateStatusColor, marginTop: "2px" }}>
+                                  <span style={{ display: "inline-block", width: "5px", height: "5px", borderRadius: "50%", background: dateStatusColor }}></span>
+                                  {ordersOnDate} pedido(s)
+                                </div>
+                              )}
+                              {minDate && (!item.promisedDate || item.promisedDate < minDate) && (
+                                <div style={{ fontSize: "0.65rem", color: "#eab308", fontWeight: 600, marginTop: "2px" }}>Min: {minDate}</div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 5. Cant. */}
+                          <div className="form-group">
+                            <label className={idx === 0 ? "" : "mobile-only-label"}>Cant.</label>
+                            <input
+                              type="number"
+                              min={1}
+                              value={item.quantity}
+                              disabled={isLocked}
+                              onChange={(e) => {
+                                const qty = Math.max(1, Number(e.target.value));
+                                const base = item.catalogOptionId
+                                  ? recalculateItemPrice(item, qty, item.priceType || "PUBLIC", item.selectedPresentationId || "")
+                                  : item.unitPrice;
+                                updateItemFields(idx, {
+                                  quantity: qty,
+                                  unitPrice: base
+                                });
+                              }}
+                            />
+                          </div>
+
+                          {/* 6. Precio U. */}
+                          <div className="form-group">
+                            <label className={idx === 0 ? "" : "mobile-only-label"}>Precio U.</label>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={item.unitPrice}
+                                min="0"
+                                disabled={isLocked}
+                                onChange={(e) => {
+                                  updateItemFields(idx, {
+                                    unitPrice: Math.max(0, Number(e.target.value)),
+                                    priceType: "MANUAL"
+                                  });
+                                }}
+                              />
+                              {pricesList.length > 0 && (
+                                <select
+                                  style={{ fontSize: "0.7rem", padding: "4px", marginTop: "2px" }}
+                                  value={item.priceType || "MANUAL"}
+                                  disabled={isLocked}
+                                  onChange={(e) => {
+                                    const pType = e.target.value;
+                                    const base = pType !== "MANUAL"
+                                      ? recalculateItemPrice(item, item.quantity, pType, item.selectedPresentationId || "")
+                                      : item.unitPrice;
+                                    updateItemFields(idx, {
+                                      priceType: pType as any,
+                                      unitPrice: base
+                                    });
+                                  }}
+                                >
+                                  <option value="MANUAL">Manual</option>
+                                  {pricesList.map((pl) => (
+                                    <option key={pl.type} value={pl.type}>{pl.label}</option>
+                                  ))}
+                                </select>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 7. Total */}
+                          <div className="form-group">
+                            <label className={idx === 0 ? "" : "mobile-only-label"}>Total</label>
+                            <span className="quotation-item-total-value">
+                              {fmt(item.quantity * item.unitPrice)}
+                            </span>
+                          </div>
+
+                          {/* 8. Actions */}
+                          <div style={{ display: "flex", gap: "6px", alignItems: "center" }} className="quotation-item-actions">
+                            <button
+                              type="button"
+                              className="btn-clone-row"
+                              style={{
+                                background: "rgba(99, 102, 241, 0.1)",
+                                color: "#818cf8",
+                                border: "1px solid rgba(99, 102, 241, 0.2)",
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "6px",
+                                cursor: isLocked ? "not-allowed" : "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                opacity: isLocked ? 0.5 : 1
+                              }}
+                              onClick={() => duplicateItem(idx)}
+                              title="Duplicar fila"
+                              disabled={isLocked}
+                            >
+                              <RefreshCw size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-delete-row"
+                              onClick={() => removeItem(idx)}
+                              disabled={isLocked || form.items.length === 1}
+                              style={{
+                                opacity: (isLocked || form.items.length === 1) ? 0.5 : 1,
+                                cursor: (isLocked || form.items.length === 1) ? "not-allowed" : "pointer"
+                              }}
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
                         </div>
-                        <div className="form-group">
-                          <label className={idx === 0 ? "" : "mobile-only-label"}>Descripción libre *</label>
-                          <input
-                            type="text"
-                            placeholder="Ej. Impresión offset 4 colores..."
-                            value={item.description}
-                            onChange={(e) => updateItem(idx, "description", e.target.value)}
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label className={idx === 0 ? "" : "mobile-only-label"}>Cant.</label>
-                          <input
-                            type="number"
-                            min={1}
-                            value={item.quantity}
-                            onChange={(e) => updateItem(idx, "quantity", Number(e.target.value))}
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label className={idx === 0 ? "" : "mobile-only-label"}>P. Unit.</label>
-                          <input
-                            type="number"
-                            min={0}
-                            step={0.01}
-                            value={item.unitPrice}
-                            onChange={(e) => updateItem(idx, "unitPrice", Number(e.target.value))}
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label className={idx === 0 ? "" : "mobile-only-label"}>Total</label>
-                          <span className="quotation-item-total-value">
-                            {fmt(item.quantity * item.unitPrice)}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          className="btn-delete-row"
-                          onClick={() => removeItem(idx)}
-                          disabled={form.items.length === 1}
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -879,6 +1357,7 @@ export const QuotationsPage: React.FC = () => {
                         min={0}
                         step={0.01}
                         value={form.discount}
+                        disabled={isLocked}
                         onChange={(e) => setForm((p) => ({ ...p, discount: Number(e.target.value) }))}
                       />
                     </div>
@@ -889,6 +1368,7 @@ export const QuotationsPage: React.FC = () => {
                         min={0}
                         max={100}
                         value={form.tax}
+                        disabled={isLocked}
                         onChange={(e) => setForm((p) => ({ ...p, tax: Number(e.target.value) }))}
                       />
                     </div>
@@ -897,35 +1377,46 @@ export const QuotationsPage: React.FC = () => {
                       <input
                         type="date"
                         value={form.validUntil}
+                        disabled={isLocked}
                         onChange={(e) => setForm((p) => ({ ...p, validUntil: e.target.value }))}
                         required
                       />
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "16px", borderRadius: "16px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--glass-border)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem" }}>
-                      <span>Subtotal:</span><strong>{fmt(subtotal)}</strong>
+                  <div className="quotation-totals-grid" style={{ marginTop: "16px" }}>
+                    <div className="quotation-notes-area">
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label>Notas / Observaciones</label>
+                        <textarea
+                          rows={3}
+                          placeholder="Condiciones de pago, tiempo de entrega, etc."
+                          value={form.notes}
+                          disabled={isLocked}
+                          onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                          style={{ minHeight: "80px", resize: "none" }}
+                        />
+                      </div>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem" }}>
-                      <span>Descuento:</span><strong style={{ color: "#ef4444" }}>- {fmt(form.discount)}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.88rem" }}>
-                      <span>IGV ({form.tax}%):</span><strong>{fmt((subtotal - form.discount) * (form.tax / 100))}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "1.1rem", borderTop: "1px solid var(--glass-border)", paddingTop: "8px", marginTop: "4px" }}>
-                      <span>Total Neto:</span><strong style={{ color: "var(--primary-color)" }}>{fmt(total)}</strong>
-                    </div>
-                  </div>
 
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label>Notas / Observaciones</label>
-                    <textarea
-                      rows={2}
-                      placeholder="Condiciones de pago, tiempo de entrega, etc."
-                      value={form.notes}
-                      onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
-                    />
+                    <div className="quotation-totals-card">
+                      <div className="total-row">
+                        <span>Subtotal:</span>
+                        <strong>{fmt(subtotal)}</strong>
+                      </div>
+                      <div className="total-row">
+                        <span>Descuento:</span>
+                        <strong style={{ color: "#ef4444" }}>- {fmt(form.discount)}</strong>
+                      </div>
+                      <div className="total-row">
+                        <span>IGV ({form.tax}%):</span>
+                        <strong>{fmt((subtotal - form.discount) * (form.tax / 100))}</strong>
+                      </div>
+                      <div className="total-row total-row--final">
+                        <span>Total Neto:</span>
+                        <strong style={{ color: "var(--primary-color)", fontSize: "1.25rem" }}>{fmt(total)}</strong>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -935,7 +1426,12 @@ export const QuotationsPage: React.FC = () => {
                 <button type="button" className="btn-cancel" onClick={() => setShowForm(false)} disabled={saving}>
                   Cancelar
                 </button>
-                <button type="submit" className="btn-save" disabled={saving}>
+                <button
+                  type="submit"
+                  className="btn-save"
+                  disabled={saving || isLocked}
+                  style={{ opacity: isLocked ? 0.5 : 1, cursor: isLocked ? "not-allowed" : "pointer" }}
+                >
                   {saving ? <Loader2 className="spin" size={16} /> : <FileText size={16} />}
                   {saving ? "Guardando..." : editTarget ? "Guardar cambios" : "Crear cotización"}
                 </button>
@@ -971,11 +1467,32 @@ export const QuotationsPage: React.FC = () => {
                     <h3>Datos del Cliente</h3>
                   </div>
                   <div className="form-grid">
-                    <div className="form-group"><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Nombre / Razón Social</span><strong>{viewTarget.clientName}</strong></div>
-                    <div className="form-group"><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Documento</span><strong>{viewTarget.clientDocument}</strong></div>
-                    {viewTarget.clientPhone && <div className="form-group"><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Teléfono</span><strong>{viewTarget.clientPhone}</strong></div>}
-                    {viewTarget.clientEmail && <div className="form-group"><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Correo electrónico</span><strong>{viewTarget.clientEmail}</strong></div>}
-                    {viewTarget.clientAddress && <div className="form-group form-group--full"><span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>Dirección</span><strong>{viewTarget.clientAddress}</strong></div>}
+                    <div className="form-group">
+                      <label>Nombre / Razón Social</label>
+                      <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--text-primary)" }}>{viewTarget.clientName}</span>
+                    </div>
+                    <div className="form-group">
+                      <label>Documento</label>
+                      <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--text-primary)" }}>{viewTarget.clientDocument}</span>
+                    </div>
+                    {viewTarget.clientPhone && (
+                      <div className="form-group">
+                        <label>Teléfono</label>
+                        <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--text-primary)" }}>{viewTarget.clientPhone}</span>
+                      </div>
+                    )}
+                    {viewTarget.clientEmail && (
+                      <div className="form-group">
+                        <label>Correo electrónico</label>
+                        <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--text-primary)" }}>{viewTarget.clientEmail}</span>
+                      </div>
+                    )}
+                    {viewTarget.clientAddress && (
+                      <div className="form-group form-group--full">
+                        <label>Dirección</label>
+                        <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--text-primary)" }}>{viewTarget.clientAddress}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1032,18 +1549,20 @@ export const QuotationsPage: React.FC = () => {
                 {/* Meta */}
                 <div className="form-grid" style={{ gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   <div className="form-group">
-                    <span>Válido hasta</span>
-                    <strong>{fmtDate(viewTarget.validUntil)}</strong>
+                    <label>Válido hasta</label>
+                    <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--text-primary)" }}>{fmtDate(viewTarget.validUntil)}</span>
                   </div>
                   <div className="form-group">
-                    <span>Estado</span>
-                    <span className={`q-status-badge q-status-badge--${viewTarget.status.toLowerCase()}`}>
-                      {STATUS_CONFIG[viewTarget.status].label}
-                    </span>
+                    <label>Estado</label>
+                    <div style={{ marginTop: "2px" }}>
+                      <span className={`q-status-badge q-status-badge--${viewTarget.status.toLowerCase()}`}>
+                        {STATUS_CONFIG[viewTarget.status].label}
+                      </span>
+                    </div>
                   </div>
                   {viewTarget.notes && (
                     <div className="form-group form-group--full">
-                      <span>Notas / Observaciones</span>
+                      <label>Notas / Observaciones</label>
                       <p style={{ margin: 0, fontSize: "0.88rem", color: "var(--text-secondary)", whiteSpace: "pre-line" }}>{viewTarget.notes}</p>
                     </div>
                   )}
@@ -1186,6 +1705,13 @@ export const QuotationsPage: React.FC = () => {
           icon="delete"
           onConfirm={handleDelete}
           onClose={() => setDeleteTarget(null)}
+        />
+      )}
+
+      {successMsg && (
+        <SuccessAnimation
+          message={successMsg}
+          onClose={() => setSuccessMsg(null)}
         />
       )}
     </div>

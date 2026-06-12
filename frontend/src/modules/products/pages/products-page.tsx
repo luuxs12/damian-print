@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { ProductsTable } from "../components/products-table/products-table";
 import { ProductForm }   from "../components/product-form/product-form";
 import type { Product }  from "../types/product.types";
+import { SuccessAnimation } from "@/shared/components/ui/success-animation";
 
 import "./products-page.scss";
 
@@ -11,11 +12,17 @@ export const ProductsPage = () => {
   const [openForm,    setOpenForm]    = useState(false);
   const [selected,    setSelected]    = useState<Product | null>(null);
   const [refreshKey,  setRefreshKey]  = useState(0);
+  const [successMsg,  setSuccessMsg]  = useState<string | null>(null);
 
   const handleCreate  = () => { setSelected(null); setOpenForm(true); };
   const handleEdit    = (p: Product) => { setSelected(p); setOpenForm(true); };
   const handleClose   = () => { setOpenForm(false); setSelected(null); };
-  const handleSuccess = () => { setRefreshKey((k) => k + 1); handleClose(); };
+  
+  const handleSuccess = () => { 
+    setSuccessMsg(selected ? "¡Producto actualizado con éxito!" : "¡Producto registrado con éxito!");
+    setRefreshKey((k) => k + 1); 
+    handleClose(); 
+  };
 
   return (
     <div className="products-page">
@@ -35,13 +42,12 @@ export const ProductsPage = () => {
       </div>
 
       {/* ── Tabla y KPIs ── */}
-      <div>
-        <ProductsTable
-          key={refreshKey}
-          refreshKey={refreshKey}
-          onEdit={handleEdit}
-        />
-      </div>
+      <ProductsTable
+        key={refreshKey}
+        refreshKey={refreshKey}
+        onEdit={handleEdit}
+        onDeleteSuccess={(msg) => setSuccessMsg(msg)}
+      />
 
       {/* ── Formulario modal ── */}
       {openForm && (
@@ -50,6 +56,13 @@ export const ProductsPage = () => {
           initialData={selected ?? undefined}
           onClose={handleClose}
           onSuccess={handleSuccess}
+        />
+      )}
+
+      {successMsg && (
+        <SuccessAnimation
+          message={successMsg}
+          onClose={() => setSuccessMsg(null)}
         />
       )}
 

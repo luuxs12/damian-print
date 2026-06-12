@@ -3,6 +3,7 @@ export interface QuotationItemDTO {
   quantity:    number;
   unitPrice:   number;
   totalPrice?: number;
+  promisedDate?: string;
 }
 
 export interface CreateQuotationDTO {

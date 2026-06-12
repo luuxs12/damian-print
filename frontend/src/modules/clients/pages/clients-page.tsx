@@ -4,6 +4,7 @@ import { Plus }     from "lucide-react";
 import { ClientsTable } from "../components/clients-table/clients-table";
 import { ClientForm }   from "../components/client-form/client-form";
 import type { Client }  from "../types/client.types";
+import { SuccessAnimation } from "@/shared/components/ui/success-animation";
 
 import "./clients-page.scss";
 
@@ -11,11 +12,17 @@ export const ClientsPage = () => {
   const [openForm,   setOpenForm]   = useState(false);
   const [selected,   setSelected]   = useState<Client | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const handleCreate  = () => { setSelected(null); setOpenForm(true); };
   const handleEdit    = (c: Client) => { setSelected(c); setOpenForm(true); };
   const handleClose   = () => { setOpenForm(false); setSelected(null); };
-  const handleSuccess = () => { setRefreshKey((k) => k + 1); handleClose(); };
+  
+  const handleSuccess = () => { 
+    setSuccessMsg(selected ? "¡Cliente actualizado con éxito!" : "¡Cliente registrado con éxito!");
+    setRefreshKey((k) => k + 1); 
+    handleClose(); 
+  };
 
   return (
     <div className="clients-page">
@@ -39,6 +46,7 @@ export const ClientsPage = () => {
         key={refreshKey}
         refreshKey={refreshKey}
         onEdit={handleEdit}
+        onDeleteSuccess={(msg) => setSuccessMsg(msg)}
       />
 
       {/* ── Formulario modal ── */}
@@ -48,6 +56,13 @@ export const ClientsPage = () => {
           initialData={selected ?? undefined}
           onClose={handleClose}
           onSuccess={handleSuccess}
+        />
+      )}
+
+      {successMsg && (
+        <SuccessAnimation
+          message={successMsg}
+          onClose={() => setSuccessMsg(null)}
         />
       )}
 

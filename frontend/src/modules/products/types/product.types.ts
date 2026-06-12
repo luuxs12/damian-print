@@ -24,6 +24,7 @@ export interface Product {
   categoryId: number;
   categoryName?: string;
   status: "ACTIVE" | "INACTIVE";
+  type?: "FINISHED_PRODUCT" | "MATERIAL" | "SERVICE";
   imageUrl?: string | null;
   createdAt: string;
   createdById?: number | null;

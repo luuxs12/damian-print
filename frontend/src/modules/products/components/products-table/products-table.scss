@@ -194,7 +194,6 @@
   }
   border-radius: 18px;
   border: 1px solid var(--glass-border);
-  overflow: hidden;
 }
 
 [data-theme="light"] .products-table-wrapper {
@@ -226,7 +225,7 @@
       top: -1px;
       z-index: 2;
       background: var(--primary-color);
-      padding: 14px 12px;
+      padding: 10px 12px;
       text-align: center;
       vertical-align: middle;
       color: white;
@@ -235,9 +234,10 @@
       text-transform: uppercase;
       letter-spacing: 0.4px;
       line-height: 1.2;
+      white-space: nowrap;
 
       &:nth-child(2) {
-        text-align: left;
+        text-align: left !important;
       }
     }
   }
@@ -253,14 +253,15 @@
     }
 
     td {
-      padding: 12px 12px;
+      padding: 8px 12px;
       vertical-align: middle;
       color: var(--text-primary);
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       text-align: center;
+      white-space: nowrap;
 
       &:nth-child(2) {
-        text-align: left;
+        text-align: left !important;
       }
     }
   }
@@ -325,17 +326,24 @@
 .prod-name-cell {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
+  max-width: 220px;
 
   .prod-title {
     font-weight: 700;
     color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .prod-code-sub {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--text-secondary);
     font-family: monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 

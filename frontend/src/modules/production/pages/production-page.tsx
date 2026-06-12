@@ -14,6 +14,7 @@ import { productionService, type ProductionOrder } from "../services/production-
 import { ProductionKanban } from "../components/production-kanban/production-kanban";
 import { ProductionCalendar } from "../components/production-calendar/production-calendar";
 import { ProductionOrderDetail } from "../components/production-order-detail/production-order-detail";
+import { SuccessAnimation } from "@/shared/components/ui/success-animation";
 import "./production-page.scss";
 
 export const ProductionPage: React.FC = () => {
@@ -22,6 +23,7 @@ export const ProductionPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<"kanban" | "calendar">("kanban");
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<ProductionOrder | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
   
   // Creation modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -58,6 +60,7 @@ export const ProductionPage: React.FC = () => {
       if (selectedOrder?.id === id) {
         setSelectedOrder((prev) => prev ? { ...prev, status: status as ProductionOrder["status"] } : null);
       }
+      setSuccessMsg("¡Estado de orden actualizado!");
     } catch {
       toast.error("Error al actualizar el estado");
     }
@@ -70,6 +73,7 @@ export const ProductionPage: React.FC = () => {
         prev.map((order) => (order.id === id ? updated : order))
       );
       setSelectedOrder(null);
+      setSuccessMsg("¡Orden de producción actualizada!");
     } catch {
       toast.error("Error al actualizar la orden");
     }
@@ -81,6 +85,7 @@ export const ProductionPage: React.FC = () => {
       setOrders((prev) => prev.filter((order) => order.id !== id));
       setSelectedOrder(null);
       toast.success("Orden eliminada correctamente");
+      setSuccessMsg("¡Orden de producción eliminada!");
     } catch {
       toast.error("Error al eliminar la orden");
     }
@@ -107,6 +112,7 @@ export const ProductionPage: React.FC = () => {
       setOrders((prev) => [newOrder, ...prev]);
       setShowCreateModal(false);
       toast.success("Orden creada correctamente");
+      setSuccessMsg("¡Orden de producción creada!");
       
       // Reset form
       setNewClient("");
@@ -303,6 +309,13 @@ export const ProductionPage: React.FC = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {successMsg && (
+        <SuccessAnimation
+          message={successMsg}
+          onClose={() => setSuccessMsg(null)}
+        />
       )}
     </div>
   );

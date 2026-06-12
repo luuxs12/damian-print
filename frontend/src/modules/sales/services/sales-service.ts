@@ -1,7 +1,10 @@
+import { authStore } from "../../auth/store/auth-store";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 const getHeaders = () => {
-  const token = localStorage.getItem("auth_token");
+  const session = authStore.getSession();
+  const token = session?.token;
   return {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -9,6 +12,12 @@ const getHeaders = () => {
 };
 
 const handleResponse = async (res: Response) => {
+  if (res.status === 401) {
+    authStore.clearSession();
+    if (!window.location.pathname.includes('/login')) {
+      window.location.href = "/login";
+    }
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || `Error ${res.status}`);
   return data;
@@ -20,6 +29,7 @@ export interface SaleItem {
   quantity:    number;
   unitPrice:   number;
   totalPrice:  number;
+  promisedDate?: string;
 }
 
 export interface Sale {
@@ -36,8 +46,10 @@ export interface Sale {
   discount:       number;
   tax:            number;
   total:          number;
-  status:         "PENDIENTE" | "PAGADA" | "ANULADA";
-  paymentMethod:  "EFECTIVO" | "TRANSFERENCIA" | "YAPE" | "PLIN" | "TARJETA";
+  status:         "PENDIENTE" | "A_CUENTA" | "PAGADA" | "ANULADA";
+  paymentMethod:  "EFECTIVO" | "TRANSFERENCIA" | "YAPE" | "PLIN" | "TARJETA" | "MULTIPLE";
+  paymentDetails: string | null;
+  advancePayment: number;
   billingType:    "NOTA_DE_VENTA" | "BOLETA" | "FACTURA";
   billingNumber:  string | null;
   createdAt:      string;
@@ -66,6 +78,8 @@ export interface CreateSalePayload {
   tax?:            number;
   status?:         string;
   paymentMethod?:  string;
+  paymentDetails?: string;
+  advancePayment?: number;
   billingType?:    string;
   billingNumber?:  string;
 }

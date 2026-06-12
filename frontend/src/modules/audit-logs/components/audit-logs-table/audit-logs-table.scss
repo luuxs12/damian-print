@@ -112,18 +112,18 @@
       top: -1px;
       z-index: 2;
       background: var(--primary-color);
-      padding: 16px 18px;
+      padding: 10px 12px;
       text-align: center;
       vertical-align: middle;
       color: white;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
       white-space: nowrap;
 
       &:nth-child(5) {
-        text-align: left;
+        text-align: left !important;
       }
     }
   }
@@ -139,14 +139,15 @@
     }
 
     td {
-      padding: 16px 18px;
+      padding: 8px 12px;
       vertical-align: middle;
       color: var(--text-primary);
-      font-size: 0.9rem;
+      font-size: 0.86rem;
       text-align: center;
+      white-space: nowrap;
 
       &:nth-child(5) {
-        text-align: left;
+        text-align: left !important;
       }
 
       &.date-cell {
@@ -226,7 +227,7 @@
   .details-preview {
     font-size: 0.85rem;
     color: var(--text-secondary);
-    max-width: 550px;
+    max-width: 420px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

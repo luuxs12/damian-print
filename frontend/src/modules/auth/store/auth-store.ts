@@ -36,6 +36,7 @@ export const useAuthStore = create<AuthState>()(
 export const authStore = {
   saveSession: (session: AuthSession) => {
     useAuthStore.getState().setSession(session);
+    localStorage.setItem("auth_token", session.token);
   },
 
   getSession: () => {
@@ -44,6 +45,7 @@ export const authStore = {
 
   clearSession: () => {
     useAuthStore.getState().setSession(null);
+    localStorage.removeItem("auth_token");
   },
 
   isAuthenticated: () => {

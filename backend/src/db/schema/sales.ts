@@ -18,8 +18,10 @@ export const sales = pgTable(
     discount:       doublePrecision("discount").notNull().default(0),
     tax:            doublePrecision("tax").notNull().default(0), // IGV
     total:          doublePrecision("total").notNull().default(0),
-    status:         text("status").notNull().default("PENDIENTE"), // PENDIENTE | PAGADA | ANULADA
-    paymentMethod:  text("payment_method").notNull().default("EFECTIVO"), // EFECTIVO | TRANSFERENCIA | YAPE | PLIN | TARJETA
+    status:         text("status").notNull().default("PENDIENTE"), // PENDIENTE | A_CUENTA | PAGADA | ANULADA
+    paymentMethod:  text("payment_method").notNull().default("EFECTIVO"), // EFECTIVO | TRANSFERENCIA | YAPE | PLIN | TARJETA | MULTIPLE
+    paymentDetails: text("payment_details"), // To store split payment breakdown
+    advancePayment: doublePrecision("advance_payment").notNull().default(0),
     billingType:    text("billing_type").notNull().default("NOTA_DE_VENTA"), // NOTA_DE_VENTA | BOLETA | FACTURA
     billingNumber:  text("billing_number"), // e.g. B001-0001 or F001-0001
     createdAt:      timestamp("created_at").defaultNow(),
@@ -37,5 +39,6 @@ export const saleItems = pgTable(
     quantity:    integer("quantity").notNull().default(1),
     unitPrice:   doublePrecision("unit_price").notNull().default(0),
     totalPrice:  doublePrecision("total_price").notNull().default(0),
+    promisedDate: timestamp("promised_date"),
   }
 );

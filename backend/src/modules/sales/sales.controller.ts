@@ -114,7 +114,7 @@ export const salesController = {
       const docCode = s.billingNumber || s.saleNumber;
       
       const html = EmailTemplates.getSaleTemplate(s);
-      const sent = await sendMail(s.clientEmail.trim(), `${docName} ${docCode} - Industria Gráfica Damian`, html);
+      const mailResult = await sendMail(s.clientEmail.trim(), `${docName} ${docCode} - Industria Gráfica Damian`, html);
       
       const currentUser = request.currentUser;
       if (currentUser) {
@@ -123,11 +123,11 @@ export const salesController = {
           username: currentUser.username,
           module:   "Ventas",
           action:   "EDITAR",
-          details:  { notes: `${docName} ${docCode} enviada por correo a ${s.clientEmail}` },
+          details:  { notes: `${docName} ${docCode} enviada por correo a ${s.clientEmail}${mailResult.previewUrl ? ` (Preview: ${mailResult.previewUrl})` : ''}` },
         }).catch(console.error);
       }
 
-      return reply.send({ message: "Correo enviado con éxito.", sent });
+      return reply.send({ message: "Correo enviado con éxito.", ...mailResult });
     } catch (err: any) {
       return reply.status(500).send({ message: err.message || "Error al enviar el correo." });
     }

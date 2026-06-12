@@ -92,6 +92,20 @@
       "when": 1780668968292,
       "tag": "0012_add_production",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1780800334519,
+      "tag": "0013_add_quotations",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1780997176764,
+      "tag": "0014_add_sales",
+      "breakpoints": true
     }
   ]
 }

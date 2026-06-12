@@ -34,5 +34,6 @@ export const quotationItems = pgTable(
     quantity:    integer("quantity").notNull().default(1),
     unitPrice:   doublePrecision("unit_price").notNull().default(0),
     totalPrice:  doublePrecision("total_price").notNull().default(0),
+    promisedDate: timestamp("promised_date"),
   }
 );

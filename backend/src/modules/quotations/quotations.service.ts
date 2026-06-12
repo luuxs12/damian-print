@@ -4,7 +4,7 @@ import { quotations, quotationItems } from "../../db/schema/quotations";
 import { clients } from "../../db/schema/clients";
 import type { CreateQuotationDTO, UpdateQuotationDTO } from "./quotations.types";
 
-const VALID_STATUSES: readonly string[] = ["PENDING", "APPROVED", "REJECTED", "EXPIRED"] as const;
+const VALID_STATUSES: readonly string[] = ["PENDING", "APPROVED", "REJECTED", "EXPIRED", "VENDIDA"] as const;
 
 /* ── Number generator ─────────────────────────────────── */
 const nextQuotationNumber = async (): Promise<string> => {
@@ -87,6 +87,7 @@ export const quotationsService = {
       quantity:    item.quantity,
       unitPrice:   item.unitPrice,
       totalPrice:  item.quantity * item.unitPrice,
+      promisedDate: item.promisedDate ? new Date(item.promisedDate) : null,
     }));
 
     const discount = data.discount ?? 0;
@@ -170,6 +171,10 @@ export const quotationsService = {
     const [existing] = await db.select().from(quotations).where(eq(quotations.id, id));
     if (!existing) throw new Error("Cotización no encontrada.");
 
+    if (existing.status === "VENDIDA") {
+      throw new Error("No se puede modificar una cotización que ya ha sido convertida a venta.");
+    }
+
     if (data.status && !VALID_STATUSES.includes(data.status)) {
       throw new Error("Estado inválido.");
     }
@@ -228,6 +233,7 @@ export const quotationsService = {
         quantity:    item.quantity,
         unitPrice:   item.unitPrice,
         totalPrice:  item.quantity * item.unitPrice,
+        promisedDate: item.promisedDate ? new Date(item.promisedDate) : null,
       }));
       const discount = data.discount ?? existing.discount ?? 0;
       const tax      = data.tax ?? existing.tax ?? 18;
@@ -265,6 +271,13 @@ export const quotationsService = {
   updateStatus: async (id: number, status: string) => {
     if (!VALID_STATUSES.includes(status)) throw new Error("Estado inválido.");
 
+    const [existing] = await db.select().from(quotations).where(eq(quotations.id, id));
+    if (!existing) throw new Error("Cotización no encontrada.");
+    
+    if (existing.status === "VENDIDA") {
+      throw new Error("No se puede cambiar el estado de una cotización que ya ha sido convertida a venta.");
+    }
+
     const [updated] = await db
       .update(quotations)
       .set({ status, updatedAt: new Date() })
@@ -277,6 +290,11 @@ export const quotationsService = {
   delete: async (id: number) => {
     const [existing] = await db.select().from(quotations).where(eq(quotations.id, id));
     if (!existing) throw new Error("Cotización no encontrada.");
+    
+    if (existing.status === "VENDIDA") {
+      throw new Error("No se puede eliminar una cotización que ya ha sido convertida a venta.");
+    }
+
     await db.delete(quotations).where(eq(quotations.id, id));
     return existing;
   },

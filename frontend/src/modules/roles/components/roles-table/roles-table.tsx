@@ -13,9 +13,10 @@ const TOTAL_MODULES = 11;
 
 interface Props {
   onEditRole: (role: Role) => void;
+  onDeleteSuccess?: (msg: string) => void;
 }
 
-export const RolesTable = ({ onEditRole }: Props) => {
+export const RolesTable = ({ onEditRole, onDeleteSuccess }: Props) => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [search, setSearch] = useState("");
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
@@ -65,6 +66,9 @@ export const RolesTable = ({ onEditRole }: Props) => {
       await rolesService.deleteRole(selectedRole.id);
       setRoles((prev) => prev.filter((role) => role.id !== selectedRole.id));
       toast.success("Perfil eliminado correctamente");
+      if (onDeleteSuccess) {
+        onDeleteSuccess("¡Perfil eliminado con éxito!");
+      }
       setSelectedRole(null);
       setModalType(null);
     } catch {

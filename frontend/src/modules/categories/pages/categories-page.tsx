@@ -3,6 +3,7 @@ import { useState } from "react";
 import { CategoriesTable } from "../components/categories-table";
 import { CategoryForm }    from "../components/category-form";
 import type { Category }   from "../types/category.types";
+import { SuccessAnimation } from "@/shared/components/ui/success-animation";
 
 import "./categories-page.scss";
 
@@ -11,11 +12,16 @@ export const CategoriesPage = () => {
   const [openForm,     setOpenForm]     = useState(false);
   const [selected,     setSelected]     = useState<Category | null>(null);
   const [refreshKey,   setRefreshKey]   = useState(0);
+  const [successMsg,   setSuccessMsg]   = useState<string | null>(null);
 
   const handleCreate = () => { setSelected(null); setOpenForm(true); };
   const handleEdit   = (cat: Category) => { setSelected(cat); setOpenForm(true); };
   const handleClose  = () => { setOpenForm(false); setSelected(null); };
-  const handleSuccess = () => { setRefreshKey((k) => k + 1); handleClose(); };
+  const handleSuccess = () => { 
+    setSuccessMsg(selected ? "¡Categoría actualizada con éxito!" : "¡Categoría registrada con éxito!");
+    setRefreshKey((k) => k + 1); 
+    handleClose(); 
+  };
 
   return (
     <div className="categories-page">
@@ -33,13 +39,12 @@ export const CategoriesPage = () => {
       </div>
 
       {/* ── Tabla ── */}
-      <div>
-        <CategoriesTable
-          key={refreshKey}
-          refreshKey={refreshKey}
-          onEdit={handleEdit}
-        />
-      </div>
+      <CategoriesTable
+        key={refreshKey}
+        refreshKey={refreshKey}
+        onEdit={handleEdit}
+        onDeleteSuccess={(msg) => setSuccessMsg(msg)}
+      />
 
       {/* ── Formulario modal ── */}
       {openForm && (
@@ -48,6 +53,13 @@ export const CategoriesPage = () => {
           initialData={selected ?? undefined}
           onClose={handleClose}
           onSuccess={handleSuccess}
+        />
+      )}
+
+      {successMsg && (
+        <SuccessAnimation
+          message={successMsg}
+          onClose={() => setSuccessMsg(null)}
         />
       )}
 

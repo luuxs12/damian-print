@@ -29,14 +29,15 @@ import {
 } from "../../services/users-service";
 
 interface Props {
-
   onEditUser: (
     user: User
   ) => void;
+  onDeleteSuccess?: (msg: string) => void;
 }
 
 export const UsersTable = ({
   onEditUser,
+  onDeleteSuccess,
 }: Props) => {
 
   const [
@@ -164,6 +165,10 @@ export const UsersTable = ({
         toast.success(
           "Usuario eliminado"
         );
+
+        if (onDeleteSuccess) {
+          onDeleteSuccess("¡Usuario eliminado con éxito!");
+        }
 
         setSelectedId(
           null

@@ -6,7 +6,7 @@ import { productionOrders } from "../../db/schema/production";
 export const dashboardService = {
   getStats: async (startDate?: Date, endDate?: Date) => {
     // 1. Calculate revenue from paid sales
-    const salesConditions = [eq(sales.status, "PAGADA")];
+    const salesConditions = [sql`${sales.status} IN ('PAGADA', 'A_CUENTA')`];
     if (startDate && endDate) {
       salesConditions.push(gte(sales.createdAt, startDate));
       salesConditions.push(lte(sales.createdAt, endDate));
@@ -14,7 +14,7 @@ export const dashboardService = {
 
     const [salesStat] = await db
       .select({
-        total: sql<number>`COALESCE(SUM(${sales.total}), 0)`,
+        total: sql<number>`COALESCE(SUM(CASE WHEN ${sales.status} = 'A_CUENTA' THEN ${sales.advancePayment} ELSE ${sales.total} END), 0)`,
         count: sql<number>`COALESCE(COUNT(${sales.id}), 0)`
       })
       .from(sales)
@@ -51,7 +51,7 @@ export const dashboardService = {
       .select({
         dateStr: sql<string>`TO_CHAR(${sales.createdAt}, 'DD/MM')`,
         dayOfWeek: sql<string>`TO_CHAR(${sales.createdAt}, 'Dy')`,
-        ingresos: sql<number>`COALESCE(SUM(${sales.total}), 0)`,
+        ingresos: sql<number>`COALESCE(SUM(CASE WHEN ${sales.status} = 'A_CUENTA' THEN ${sales.advancePayment} ELSE ${sales.total} END), 0)`,
         pedidos: sql<number>`COALESCE(COUNT(${sales.id}), 0)`
       })
       .from(sales)

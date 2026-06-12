@@ -13,9 +13,10 @@ import "./presentations-table.scss";
 interface Props {
   onEdit:     (pres: Presentation) => void;
   refreshKey: number;
+  onDeleteSuccess?: (msg: string) => void;
 }
 
-export const PresentationsTable = ({ onEdit, refreshKey }: Props) => {
+export const PresentationsTable = ({ onEdit, refreshKey, onDeleteSuccess }: Props) => {
   const [presentations, setPresentations] = useState<Presentation[]>([]);
   const [loading,       setLoading]       = useState(true);
   const [search,        setSearch]        = useState("");
@@ -39,7 +40,7 @@ export const PresentationsTable = ({ onEdit, refreshKey }: Props) => {
     (p.description ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const ITEMS_PER_PAGE = 8;
+  const ITEMS_PER_PAGE = 5;
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
 
   const paginatedPresentations = filtered.slice(
@@ -58,6 +59,9 @@ export const PresentationsTable = ({ onEdit, refreshKey }: Props) => {
       await presentationsService.deletePresentation(deleteId);
       setPresentations((prev) => prev.filter((p) => p.id !== deleteId));
       toast.success("Presentación eliminada");
+      if (onDeleteSuccess) {
+        onDeleteSuccess("¡Presentación eliminada con éxito!");
+      }
     } catch {
       toast.error("No se pudo eliminar la presentación");
     } finally {

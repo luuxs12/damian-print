@@ -56,6 +56,7 @@ export const getProducts = async () => {
       laborCost: products.laborCost,
       overheadCost: products.overheadCost,
       materials: products.materials,
+      type: products.type,
       presentationsCount: sql<number>`(
         SELECT count(*) FROM ${productPresentations}
         WHERE ${productPresentations.productId} = ${products.id}
@@ -93,6 +94,7 @@ export const getProductById = async (id: number) => {
       laborCost: products.laborCost,
       overheadCost: products.overheadCost,
       materials: products.materials,
+      type: products.type,
     })
     .from(products)
     .innerJoin(categories, eq(products.categoryId, categories.id))

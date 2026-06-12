@@ -20,9 +20,10 @@ import "./products-table.scss";
 interface Props {
   onEdit: (product: Product) => void;
   refreshKey: number;
+  onDeleteSuccess?: (msg: string) => void;
 }
 
-export const ProductsTable = ({ onEdit, refreshKey }: Props) => {
+export const ProductsTable = ({ onEdit, refreshKey, onDeleteSuccess }: Props) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +39,7 @@ export const ProductsTable = ({ onEdit, refreshKey }: Props) => {
   };
   const [currentPage, setCurrentPage] = useState(1);
 
-  const ITEMS_PER_PAGE = 8;
+  const ITEMS_PER_PAGE = 5;
 
   /* Cargar datos */
   const loadData = useCallback(() => {
@@ -92,6 +93,9 @@ export const ProductsTable = ({ onEdit, refreshKey }: Props) => {
       await productsService.deleteProduct(deleteId);
       setProducts((prev) => prev.filter((p) => p.id !== deleteId));
       toast.success("Producto eliminado.");
+      if (onDeleteSuccess) {
+        onDeleteSuccess("¡Producto eliminado con éxito!");
+      }
     } catch {
       toast.error("No se pudo eliminar el producto.");
     } finally {

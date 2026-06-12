@@ -22,9 +22,10 @@ const formatDate = (d: string) =>
 interface Props {
   refreshKey: number;
   onEdit: (s: Supply) => void;
+  onDeleteSuccess?: (msg: string) => void;
 }
 
-export const SuppliesTable = ({ refreshKey, onEdit }: Props) => {
+export const SuppliesTable = ({ refreshKey, onEdit, onDeleteSuccess }: Props) => {
   const [supplies,    setSupplies]    = useState<Supply[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [search,      setSearch]      = useState("");
@@ -73,6 +74,9 @@ export const SuppliesTable = ({ refreshKey, onEdit }: Props) => {
       await suppliesService.deleteSupply(deleteId);
       setSupplies((prev) => prev.filter((s) => s.id !== deleteId));
       toast.success("Insumo eliminado.");
+      if (onDeleteSuccess) {
+        onDeleteSuccess("¡Insumo eliminado con éxito!");
+      }
     } catch {
       toast.error("No se pudo eliminar el insumo.");
     } finally {

@@ -25,9 +25,7 @@ export const AuditLogsPage = () => {
       </div>
 
       {/* ── Tabla ── */}
-      <div>
-        <AuditLogsTable key={refreshKey} />
-      </div>
+      <AuditLogsTable key={refreshKey} />
 
     </div>
   );

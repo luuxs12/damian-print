@@ -198,7 +198,6 @@
   }
   border-radius: 18px;
   border: 1px solid var(--glass-border);
-  overflow: hidden;
 }
 
 [data-theme="light"] .clients-table-wrapper {
@@ -230,14 +229,18 @@
       top: -1px;
       z-index: 2;
       background: var(--primary-color);
-      padding: 14px 12px;
-      text-align: left;
+      padding: 10px 12px;
+      text-align: center;
       color: white;
       font-size: 0.8rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
       white-space: nowrap;
+
+      &:nth-child(1), &:nth-child(5) {
+        text-align: left !important;
+      }
     }
   }
 
@@ -252,10 +255,22 @@
     }
 
     td {
-      padding: 12px 12px;
+      padding: 8px 12px;
       vertical-align: middle;
       color: var(--text-primary);
-      font-size: 0.88rem;
+      font-size: 0.86rem;
+      text-align: center;
+      white-space: nowrap;
+
+      &:nth-child(1), &:nth-child(5) {
+        text-align: left !important;
+      }
+
+      &:nth-child(5) {
+        max-width: 240px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
     }
   }
 }
@@ -299,17 +314,24 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  max-width: 180px;
 }
 
 .cli-name {
   font-weight: 700;
   color: var(--text-primary);
   font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cli-sub {
   font-size: 0.76rem;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cli-type-badge {

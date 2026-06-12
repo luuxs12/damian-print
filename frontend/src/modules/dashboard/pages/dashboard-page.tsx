@@ -278,7 +278,7 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(false);
 
   const fetchStats = useCallback(async () => {
-    setLoading(true);
+    setTimeout(() => setLoading(true), 0);
     try {
       const startStr = dateRange.startDate ? dateRange.startDate.toISOString() : undefined;
       const endStr = dateRange.endDate ? dateRange.endDate.toISOString() : undefined;
@@ -287,7 +287,7 @@ export function DashboardPage() {
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 0);
     }
   }, [dateRange]);
 

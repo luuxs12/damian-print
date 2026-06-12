@@ -33,7 +33,7 @@
   box-shadow: var(--modal-shadow);
   border-radius: 28px;
   width: 100%;
-  max-width: 640px;
+  max-width: 460px;
   max-height: calc(100% - 80px);
   overflow: hidden;
   padding: 24px 28px;
@@ -100,6 +100,9 @@
 .category-form {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
   gap: 0;
 }
 

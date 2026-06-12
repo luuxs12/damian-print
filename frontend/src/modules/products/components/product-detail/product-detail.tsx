@@ -1,5 +1,5 @@
 import { 
-  X, Tag, ShoppingBag, FileText, Sparkles, 
+  X, Tag, ShoppingBag, FileText, 
   Pencil, Copy, Layers, DollarSign, History, Clock, HelpCircle 
 } from "lucide-react";
 import { useState } from "react";
@@ -17,7 +17,7 @@ interface Props {
 }
 
 export const ProductDetail = ({ product, onClose, onEdit, onDuplicateSuccess }: Props) => {
-  const [activeTab, setActiveTab] = useState<"general" | "materials" | "finishes" | "pricing" | "history">("materials");
+  const [activeTab, setActiveTab] = useState<"general" | "materials" | "pricing" | "history">("materials");
   const [duplicating, setDuplicating] = useState(false);
 
   const apiUrl = (import.meta.env.VITE_API_URL as string ?? "http://localhost:4000").replace(/\/$/, "");
@@ -161,12 +161,7 @@ export const ProductDetail = ({ product, onClose, onEdit, onDuplicateSuccess }: 
             >
               Materiales / Insumos
             </button>
-            <button 
-              className={`tab-link ${activeTab === "finishes" ? "active" : ""}`}
-              onClick={() => setActiveTab("finishes")}
-            >
-              Acabados
-            </button>
+
             <button 
               className={`tab-link ${activeTab === "pricing" ? "active" : ""}`}
               onClick={() => setActiveTab("pricing")}
@@ -205,10 +200,7 @@ export const ProductDetail = ({ product, onClose, onEdit, onDuplicateSuccess }: 
                     <span className="spec-title">Días de Elaboración</span>
                     <span className="spec-val">{product.overheadCost ? `${product.overheadCost} días` : "Inmediato"}</span>
                   </div>
-                  <div className="spec-card">
-                    <span className="spec-title">Orden de Producción</span>
-                    <span className="spec-val">{product.sendToProduction ? "Habilitado" : "No aplica"}</span>
-                  </div>
+
                 </div>
               </div>
             )}
@@ -286,27 +278,7 @@ export const ProductDetail = ({ product, onClose, onEdit, onDuplicateSuccess }: 
               </div>
             )}
 
-            {/* 3. Acabados */}
-            {activeTab === "finishes" && (
-              <div className="tab-pane-finishes">
-                <h4 className="pane-title"><Sparkles size={15} /> Acabados de Post-Prensa</h4>
-                <div className="finishes-list">
-                  {product.branchName && product.branchName.trim() ? (
-                    product.branchName.split(",").map((finishName, idx) => (
-                      <div key={idx} className="finish-tag-card">
-                        <span className="finish-name">{finishName.trim()}</span>
-                        <p>Acabado especial de post-prensa requerido para la entrega.</p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="no-items-placeholder">
-                      <HelpCircle size={28} />
-                      <p>No se especificaron acabados para este producto/servicio.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+
 
             {/* 4. Precios por Cantidad (Escalas) */}
             {activeTab === "pricing" && (

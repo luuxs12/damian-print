@@ -45,8 +45,6 @@ const schema = z.object({
 
   // Characteristics
   manageInventory: z.boolean(),
-  sendToProduction: z.boolean(),
-  branchName: z.string().optional().nullable(),
 
   // Advanced Pricing
   pricePublic: z
@@ -118,21 +116,7 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
   const [selectedSupplyId, setSelectedSupplyId] = useState("");
   const [materialQty, setMaterialQty] = useState("");
 
-  const [selectedFinishes, setSelectedFinishes] = useState<string[]>(
-    initialData?.branchName ? initialData.branchName.split(",").map((s) => s.trim()) : []
-  );
 
-  const FINISH_OPTIONS = [
-    "Laminado Mate",
-    "Laminado Brillante",
-    "Sectorizado UV",
-    "Ojales",
-    "Refilado Guillotina",
-    "Troquelado / Corte Especial",
-    "Doblado / Plizado",
-    "Costura / Engrapado",
-    "Numerado / Perforado"
-  ];
 
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingData, setPendingData] = useState<FormData | null>(null);
@@ -153,8 +137,7 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
       unit: initialData?.unit ?? "Unidad",
       status: initialData?.status ?? "ACTIVE",
       manageInventory: initialData?.manageInventory ?? false,
-      sendToProduction: initialData?.sendToProduction ?? false,
-      branchName: initialData?.branchName ?? "",
+
       pricePublic: initialData?.pricePublic != null ? String(initialData.pricePublic) : "0",
       priceReseller: initialData?.priceReseller != null ? String(initialData.priceReseller) : "0",
       laborCost: initialData?.laborCost != null ? String(initialData.laborCost) : "0",
@@ -195,6 +178,10 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
   const basePrice = Number(watchedPricePublic) || 0;
   const estimatedProfit = Math.max(0, basePrice - estimatedCost);
   const profitMargin = basePrice > 0 ? (estimatedProfit / basePrice) * 100 : 0;
+
+  useEffect(() => {
+    setValue("pricePublic", estimatedCost.toFixed(2));
+  }, [estimatedCost, setValue]);
 
   /* Image Upload Handlers */
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -353,8 +340,8 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
         imageUrl: imageUrl || null,
         manageInventory: data.manageInventory,
         countAsPrint: false, // Explicitly false as user does not want print/machine tracking
-        sendToProduction: data.sendToProduction,
-        branchName: selectedFinishes.join(", "),
+        sendToProduction: false,
+        branchName: "",
         pricePublic: parsedPublic,
         priceReseller: parsedReseller,
         priceScales: priceScales,
@@ -567,6 +554,8 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                           step="0.01"
                           placeholder="0.00"
                           {...register("pricePublic")}
+                          readOnly
+                          className="input-readonly"
                         />
                         {errors.pricePublic && (
                           <span className="form-error" role="alert">{errors.pricePublic.message}</span>
@@ -909,19 +898,7 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                       </div>
                     </div>
  
-                    <div className="form-group">
-                      <label>Orden de Producción</label>
-                      <div className="status-toggle-wrapper" style={{ marginTop: "4px" }}>
-                        <label className="toggle-switch">
-                          <input
-                            type="checkbox"
-                            {...register("sendToProduction")}
-                          />
-                          <span className="toggle-slider" />
-                        </label>
-                        <span className="form-hint-inline" style={{ fontWeight: 600 }}>Habilitar Orden de Trabajo en Producción</span>
-                      </div>
-                    </div>
+
                   </div>
  
                   {/* Right: Real-time Analysis Card */}
@@ -962,51 +939,7 @@ export const ProductForm = ({ mode, initialData, onClose, onSuccess }: Props) =>
                 </div>
               </div>
 
-              {/* ── SECCIÓN 5: ACABADOS DE POST-PRENSA ── */}
-              <div className="form-section-card">
-                <div className="section-title-row">
-                  <span className="section-num">5</span>
-                  <h3>Acabados del Producto / Servicio</h3>
-                </div>
-                <p className="section-subtitle">Selecciona los diferentes tipos de acabados requeridos o aplicables para este pliego.</p>
-                <div className="finishes-checkbox-grid" style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
-                  gap: "12px",
-                  marginTop: "14px"
-                }}>
-                  {FINISH_OPTIONS.map((finish) => (
-                    <label key={finish} className="checkbox-label" style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      cursor: "pointer",
-                      padding: "10px 14px",
-                      borderRadius: "12px",
-                      border: "1px solid var(--glass-border)",
-                      background: selectedFinishes.includes(finish) ? "rgba(16, 185, 129, 0.1)" : "rgba(255, 255, 255, 0.01)",
-                      borderColor: selectedFinishes.includes(finish) ? "#10b981" : "var(--glass-border)",
-                      transition: "all 0.2s ease",
-                      userSelect: "none"
-                    }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedFinishes.includes(finish)}
-                        style={{ accentColor: "#10b981", width: "16px", height: "16px", cursor: "pointer" }}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedFinishes([...selectedFinishes, finish]);
-                          } else {
-                            setSelectedFinishes(selectedFinishes.filter((f) => f !== finish));
-                          }
-                        }}
-                      />
-                      <span style={{ fontSize: "0.86rem", fontWeight: 600, color: selectedFinishes.includes(finish) ? "#10b981" : "var(--text-primary)" }}>{finish}</span>
-                    </label>
-                  ))}
-                </div>
               </div>
-            </div>
 
             {/* Form Action Buttons */}
               <div className="product-form-actions">

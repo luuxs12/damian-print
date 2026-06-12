@@ -16,11 +16,12 @@ import type { Client, ClientStats } from "../../types/client.types";
 
 import "./clients-table.scss";
 
-const ITEMS_PER_PAGE = 8;
+const ITEMS_PER_PAGE = 5;
 
 interface Props {
   refreshKey: number;
   onEdit: (c: Client) => void;
+  onDeleteSuccess?: (msg: string) => void;
 }
 
 const getInitials = (name: string) =>
@@ -36,7 +37,7 @@ const getAvatarColor = (name: string): string => {
 const formatDate = (d: string) =>
   new Date(d).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" });
 
-export const ClientsTable = ({ refreshKey, onEdit }: Props) => {
+export const ClientsTable = ({ refreshKey, onEdit, onDeleteSuccess }: Props) => {
   const [clients,     setClients]     = useState<Client[]>([]);
   const [stats,       setStats]       = useState<ClientStats | null>(null);
   const [loading,     setLoading]     = useState(true);
@@ -93,6 +94,9 @@ export const ClientsTable = ({ refreshKey, onEdit }: Props) => {
       setClients((prev) => prev.filter((c) => c.id !== deleteId));
       if (viewClient?.id === deleteId) setViewClient(null);
       toast.success("Cliente eliminado.");
+      if (onDeleteSuccess) {
+        onDeleteSuccess("¡Cliente eliminado con éxito!");
+      }
     } catch {
       toast.error("No se pudo eliminar el cliente.");
     } finally {

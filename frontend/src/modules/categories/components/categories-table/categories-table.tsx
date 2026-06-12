@@ -13,9 +13,10 @@ import "./categories-table.scss";
 interface Props {
   onEdit:     (cat: Category) => void;
   refreshKey: number;
+  onDeleteSuccess?: (msg: string) => void;
 }
 
-export const CategoriesTable = ({ onEdit, refreshKey }: Props) => {
+export const CategoriesTable = ({ onEdit, refreshKey, onDeleteSuccess }: Props) => {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading,    setLoading]    = useState(true);
@@ -38,7 +39,7 @@ export const CategoriesTable = ({ onEdit, refreshKey }: Props) => {
     (c.description ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
-  const ITEMS_PER_PAGE = 8;
+  const ITEMS_PER_PAGE = 5;
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginatedCategories = filtered.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -56,6 +57,9 @@ export const CategoriesTable = ({ onEdit, refreshKey }: Props) => {
       await categoriesService.deleteCategory(deleteId);
       setCategories((prev) => prev.filter((c) => c.id !== deleteId));
       toast.success("Categoría eliminada");
+      if (onDeleteSuccess) {
+        onDeleteSuccess("¡Categoría eliminada con éxito!");
+      }
     } catch {
       toast.error("No se pudo eliminar la categoría");
     } finally {

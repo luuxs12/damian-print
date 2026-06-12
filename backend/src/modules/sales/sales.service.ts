@@ -7,8 +7,8 @@ import { productionOrders } from "../../db/schema/production";
 import { products } from "../../db/schema/products";
 import type { CreateSaleDTO, UpdateSaleDTO } from "./sales.types";
 
-const VALID_STATUSES = ["PENDIENTE", "PAGADA", "ANULADA"];
-const VALID_PAYMENT_METHODS = ["EFECTIVO", "TRANSFERENCIA", "YAPE", "PLIN", "TARJETA"];
+const VALID_STATUSES = ["PENDIENTE", "A_CUENTA", "PAGADA", "ANULADA"];
+const VALID_PAYMENT_METHODS = ["EFECTIVO", "TRANSFERENCIA", "YAPE", "PLIN", "TARJETA", "MULTIPLE"];
 const VALID_BILLING_TYPES = ["NOTA_DE_VENTA", "BOLETA", "FACTURA"];
 
 /* ── Number generators ─────────────────────────────────── */
@@ -50,7 +50,7 @@ const autoCreateProductionOrdersForSale = async (saleId: number) => {
   try {
     // 1. Fetch the sale details
     const [sale] = await db.select().from(sales).where(eq(sales.id, saleId));
-    if (!sale || sale.status !== "PAGADA") return;
+    if (!sale || (sale.status !== "PAGADA" && sale.status !== "A_CUENTA")) return;
 
     // 2. Fetch the items for this sale
     const items = await db.select().from(saleItems).where(eq(saleItems.saleId, saleId));
@@ -60,20 +60,18 @@ const autoCreateProductionOrdersForSale = async (saleId: number) => {
     const activeProducts = await db.select().from(products).where(eq(products.status, "ACTIVE"));
 
     for (const item of items) {
-      // Find matching product by name (case-insensitive)
+      // Find matching product by name (case-insensitive, ignoring finishes suffix)
+      const baseDescription = item.description.split(" (Acabado:")[0].trim().toLowerCase();
       const matchedProduct = activeProducts.find(
-        (p) => p.name.toLowerCase().trim() === item.description.toLowerCase().trim()
+        (p) => p.name.toLowerCase().trim() === baseDescription
       );
 
-      // Check if product requires production.
-      if (matchedProduct && !matchedProduct.sendToProduction) {
-        continue; // Skip if explicitly disabled for production
-      }
-
-      // Calculate promised date based on product's overheadCost (elaboration days)
-      const days = matchedProduct && matchedProduct.overheadCost ? Math.round(Number(matchedProduct.overheadCost)) : 2;
-      const promisedDate = new Date();
-      promisedDate.setDate(promisedDate.getDate() + (days > 0 ? days : 2));
+      const promisedDate = item.promisedDate ? new Date(item.promisedDate) : (() => {
+        const days = matchedProduct && matchedProduct.overheadCost ? Math.round(Number(matchedProduct.overheadCost)) : 2;
+        const pd = new Date();
+        pd.setDate(pd.getDate() + (days > 0 ? days : 2));
+        return pd;
+      })();
 
       // Check if a production order already exists for this sale item to avoid duplicate orders
       const [existingOrder] = await db
@@ -163,6 +161,7 @@ export const salesService = {
       quantity:    item.quantity,
       unitPrice:   item.unitPrice,
       totalPrice:  item.quantity * item.unitPrice,
+      promisedDate: item.promisedDate ? new Date(item.promisedDate) : null,
     }));
 
     const discount = data.discount ?? 0;
@@ -229,6 +228,8 @@ export const salesService = {
         total,
         status:         data.status || "PENDIENTE",
         paymentMethod:  data.paymentMethod || "EFECTIVO",
+        paymentDetails: data.paymentDetails || null,
+        advancePayment: data.advancePayment || 0,
         billingType,
         billingNumber,
       })
@@ -263,6 +264,16 @@ export const salesService = {
   update: async (id: number, data: UpdateSaleDTO) => {
     const [existing] = await db.select().from(sales).where(eq(sales.id, id));
     if (!existing) throw new Error("Venta no encontrada.");
+
+    if (existing.status === "PAGADA") {
+      const updatedKeys = Object.keys(data).filter(
+        (key) => data[key as keyof UpdateSaleDTO] !== undefined
+      );
+      const invalidKeys = updatedKeys.filter((key) => key !== "billingType");
+      if (invalidKeys.length > 0) {
+        throw new Error("No se puede modificar una venta ya cobrada/pagada.");
+      }
+    }
 
     if (data.status && !VALID_STATUSES.includes(data.status)) {
       throw new Error("Estado inválido.");
@@ -304,6 +315,8 @@ export const salesService = {
     if (data.clientAddress  !== undefined) patch.clientAddress  = data.clientAddress?.trim() || null;
     if (data.status         !== undefined) patch.status         = data.status;
     if (data.paymentMethod  !== undefined) patch.paymentMethod  = data.paymentMethod;
+    if (data.paymentDetails !== undefined) patch.paymentDetails = data.paymentDetails;
+    if (data.advancePayment !== undefined) patch.advancePayment = data.advancePayment;
 
     if (data.items?.length) {
       const parsedItems = data.items.map((item) => ({
@@ -311,6 +324,7 @@ export const salesService = {
         quantity:    item.quantity,
         unitPrice:   item.unitPrice,
         totalPrice:  item.quantity * item.unitPrice,
+        promisedDate: item.promisedDate ? new Date(item.promisedDate) : null,
       }));
       const discount = data.discount ?? existing.discount ?? 0;
       const tax      = data.tax ?? existing.tax ?? 18;
@@ -350,6 +364,9 @@ export const salesService = {
   delete: async (id: number) => {
     const [existing] = await db.select().from(sales).where(eq(sales.id, id));
     if (!existing) throw new Error("Venta no encontrada.");
+    if (existing.status === "PAGADA") {
+      throw new Error("No se puede eliminar una venta ya cobrada/pagada.");
+    }
     await db.delete(sales).where(eq(sales.id, id));
     return existing;
   },

@@ -15,6 +15,8 @@ from "../components/user-form";
 import type { User }
 from "../types/user.types";
 
+import { SuccessAnimation } from "@/shared/components/ui/success-animation";
+
 export const UsersPage = () => {
 
   const [
@@ -33,6 +35,13 @@ export const UsersPage = () => {
     refreshKey,
     setRefreshKey,
   ] = useState(0);
+
+  const [
+    successMsg,
+    setSuccessMsg,
+  ] = useState<
+    string | null
+  >(null);
 
   const handleCreateUser =
     () => {
@@ -68,6 +77,11 @@ export const UsersPage = () => {
 
   const handleSuccess =
     () => {
+      setSuccessMsg(
+        selectedUser
+          ? "¡Usuario actualizado con éxito!"
+          : "¡Usuario registrado con éxito!"
+      );
 
       setRefreshKey(
         (prev) => prev + 1
@@ -92,6 +106,7 @@ export const UsersPage = () => {
         onEditUser={
           handleEditUser
         }
+        onDeleteSuccess={(msg) => setSuccessMsg(msg)}
       />
 
       {openForm && (
@@ -117,6 +132,13 @@ export const UsersPage = () => {
           }
         />
 
+      )}
+
+      {successMsg && (
+        <SuccessAnimation
+          message={successMsg}
+          onClose={() => setSuccessMsg(null)}
+        />
       )}
 
     </div>

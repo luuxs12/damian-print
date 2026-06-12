@@ -3,6 +3,7 @@ export interface SaleItemDTO {
   quantity:    number;
   unitPrice:   number;
   totalPrice?: number;
+  promisedDate?: string;
 }
 
 export interface CreateSaleDTO {
@@ -16,8 +17,10 @@ export interface CreateSaleDTO {
   items:           SaleItemDTO[];
   discount?:       number;
   tax?:            number;
-  status?:         string; // PENDIENTE | PAGADA | ANULADA
-  paymentMethod?:  string; // EFECTIVO | TRANSFERENCIA | YAPE | PLIN | TARJETA
+  status?:         string; // PENDIENTE | A_CUENTA | PAGADA | ANULADA
+  paymentMethod?:  string; // EFECTIVO | TRANSFERENCIA | YAPE | PLIN | TARJETA | MULTIPLE
+  paymentDetails?: string;
+  advancePayment?: number;
   billingType?:    string; // NOTA_DE_VENTA | BOLETA | FACTURA
   billingNumber?:  string;
 }
@@ -34,6 +37,8 @@ export interface UpdateSaleDTO {
   tax?:            number;
   status?:         string;
   paymentMethod?:  string;
+  paymentDetails?: string;
+  advancePayment?: number;
   billingType?:    string;
   billingNumber?:  string;
 }

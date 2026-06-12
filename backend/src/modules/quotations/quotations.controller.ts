@@ -134,7 +134,7 @@ export const quotationsController = {
       }
       
       const html = EmailTemplates.getQuotationTemplate(q);
-      const sent = await sendMail(q.clientEmail.trim(), `Cotización ${q.quotationNumber} - Industria Gráfica Damian`, html);
+      const mailResult = await sendMail(q.clientEmail.trim(), `Cotización ${q.quotationNumber} - Industria Gráfica Damian`, html);
       
       const currentUser = request.currentUser;
       if (currentUser) {
@@ -143,11 +143,11 @@ export const quotationsController = {
           username: currentUser.username,
           module:   "Cotizaciones",
           action:   "EDITAR",
-          details:  { notes: `Cotización ${q.quotationNumber} enviada por correo a ${q.clientEmail}` },
+          details:  { notes: `Cotización ${q.quotationNumber} enviada por correo a ${q.clientEmail}${mailResult.previewUrl ? ` (Preview: ${mailResult.previewUrl})` : ''}` },
         }).catch(console.error);
       }
 
-      return reply.send({ message: "Correo enviado con éxito.", sent });
+      return reply.send({ message: "Correo enviado con éxito.", ...mailResult });
     } catch (err: any) {
       return reply.status(500).send({ message: err.message || "Error al enviar el correo." });
     }

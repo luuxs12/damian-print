@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import {
+  LucideIcon,
   LayoutDashboard,
   Users,
   Shield,
@@ -27,7 +28,7 @@ import { settingsService } from "@/modules/settings/services/settings-service";
 
 import "./sidebar.scss";
 
-const menuItems: Array<{ label: string; icon: any; path: string; disabled?: boolean }> = [
+const menuItems: Array<{ label: string; icon: LucideIcon; path: string; disabled?: boolean }> = [
   { label: "Dashboard",      icon: LayoutDashboard, path: "/dashboard" },
   { label: "Cotizaciones",   icon: FileText,        path: "/quotations" },
   { label: "Ventas",         icon: ShoppingCart,    path: "/sales" },

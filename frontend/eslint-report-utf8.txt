@@ -1,0 +1,170 @@
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\layouts\dashboard-layout\sidebar\sidebar.tsx
+  30:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\categories\components\category-form\category-form.tsx
+  60:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\categories\components\category-form\category-form.tsx:60:23
+  58 |   });
+  59 |
+> 60 |   const statusValue = watch("status");
+     |                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  61 |
+  62 |   const handlePreSubmit = (data: FormData) => {
+  63 |     setPendingData(data);  react-hooks/incompatible-library
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\clients\components\client-form\client-form.tsx
+  233:43  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\clients\components\client-form\client-form.tsx:233:43
+  231 |                             className="btn-search-doc"
+  232 |                             onClick={async () => {
+> 233 |                               const doc = watch("document");
+      |                                           ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  234 |                               if (!doc || doc.trim().length < 8) {
+  235 |                                 toast.error("Por favor, ingrese un n├║mero de documento v├ílido.");
+  236 |                                 return;  react-hooks/incompatible-library
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\dashboard\pages\dashboard-page.tsx
+  296:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\dashboard\pages\dashboard-page.tsx:296:7
+  294 |   useEffect(() => {
+  295 |     if (hasAccess) {
+> 296 |       fetchStats();
+      |       ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  297 |     }
+  298 |   }, [fetchStats, hasAccess]);
+  299 |  react-hooks/set-state-in-effect
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\presentations\components\presentation-form\presentation-form.tsx
+  84:31  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\presentations\components\presentation-form\presentation-form.tsx:84:31
+  82 |   });
+  83 |
+> 84 |   const selectedProductId   = watch("productId");
+     |                               ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  85 |   const descriptionValue    = watch("description") ?? "";
+  86 |   const statusValue         = watch("status");
+  87 |   const costValue           = Number(watch("cost")) || 0;  react-hooks/incompatible-library
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\quotations\pages\quotations-page.tsx
+   54:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  168:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  429:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\sales\pages\sales-page.tsx
+    61:13   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+    62:18   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   133:54   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   134:60   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   196:19   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   236:29   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   282:59   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   283:29   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   296:53   error  Unnecessary escape character: \.          no-useless-escape
+   297:45   error  Unnecessary escape character: \.          no-useless-escape
+   298:45   error  Unnecessary escape character: \.          no-useless-escape
+   300:99   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   301:29   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   307:18   error  'e' is defined but never used             @typescript-eslint/no-unused-vars
+   307:21   error  Empty block statement                     no-empty
+   324:40   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   325:47   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   326:45   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   327:34   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   406:21   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   516:23   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   581:19   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   601:19   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   619:19   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   632:19   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   650:19   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   664:19   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   816:43   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   828:19   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   828:27   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   829:23   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   838:55   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   838:63   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   863:46   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   867:21   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   867:29   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   868:25   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1024:80   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1025:47   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1041:45   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1043:46   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1313:97   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1326:92   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  1824:59   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2109:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2110:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2116:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2117:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2118:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2119:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2126:43   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2126:63   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2128:44   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2128:64   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2128:102  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2130:39   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2130:84   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2132:57   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2132:133  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2140:43   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2145:33   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2145:76   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2155:116  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2157:52   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2159:46   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2176:56   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2177:51   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  2184:52   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\supplies\components\supply-form\supply-form.tsx
+  82:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\supplies\components\supply-form\supply-form.tsx:82:23
+  80 |   });
+  81 |
+> 82 |   const statusValue = watch("status");
+     |                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  83 |
+  84 |   const handlePreSubmit = (data: FormData) => {
+  85 |     setPendingData(data);  react-hooks/incompatible-library
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\users\components\user-form\user-form.tsx
+  61:23  warning  Compilation Skipped: Use of incompatible library
+
+This API returns functions which cannot be memoized without leading to stale UI. To prevent this, by default React Compiler will skip memoizing this component/hook. However, you may see issues if values from this API are passed to other components/hooks that are memoized.
+
+C:\Users\Administrator\Documents\Universidad\damian-print\frontend\src\modules\users\components\user-form\user-form.tsx:61:23
+  59 |   });
+  60 |
+> 61 |   const statusValue = watch("status");
+     |                       ^^^^^ React Hook Form's `useForm()` API returns a `watch()` function which cannot be memoized safely.
+  62 |
+  63 |   const handlePreSubmit = (data: FormData) => {
+  64 |     if (mode === "create" && !data.password) {  react-hooks/incompatible-library
+
+Ô£û 78 problems (73 errors, 5 warnings)
+
+[ELIFECYCLE] Command failed with exit code 1.

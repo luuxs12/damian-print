@@ -1,7 +1,10 @@
+import { authStore } from "@/modules/auth/store/auth-store";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 const getHeaders = () => {
-  const token = localStorage.getItem("auth_token");
+  const session = authStore.getSession();
+  const token = session?.token;
   return {
     "Content-Type": "application/json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -9,6 +12,12 @@ const getHeaders = () => {
 };
 
 const handleResponse = async (res: Response) => {
+  if (res.status === 401) {
+    authStore.clearSession();
+    if (!window.location.pathname.includes('/login')) {
+      window.location.href = "/login";
+    }
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.message || `Error ${res.status}`);
   return data;

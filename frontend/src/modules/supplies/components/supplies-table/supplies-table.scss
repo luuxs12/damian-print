@@ -217,8 +217,8 @@
       z-index: 2;
       background: var(--primary-color);
       color: white;
-      padding: 16px 20px;
-      font-size: 0.82rem;
+      padding: 10px 12px;
+      font-size: 0.8rem;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -226,7 +226,7 @@
       white-space: nowrap;
 
       &:nth-child(2) {
-        text-align: left;
+        text-align: left !important;
       }
     }
   }
@@ -246,14 +246,18 @@
     }
 
     td {
-      padding: 14px 20px;
-      font-size: 0.9rem;
+      padding: 8px 12px;
+      font-size: 0.86rem;
       color: var(--text-primary);
       vertical-align: middle;
       text-align: center;
+      white-space: nowrap;
 
       &:nth-child(2) {
-        text-align: left;
+        text-align: left !important;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
     }
   }
